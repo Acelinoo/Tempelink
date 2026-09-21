@@ -49,7 +49,7 @@ export async function executeImmediateDownload(options: DownloadOptions): Promis
       document.body.removeChild(anchor);
       window.URL.revokeObjectURL(blobUrl);
     }, 1500);
-  } catch (err) {
+  } catch {
     // Strategy 2 (Fallback): Trigger invisible download anchor on streaming endpoint
     // Because the server responds with 'Content-Disposition: attachment; filename="..."',
     // modern browsers immediately trigger the file save dialog without navigating away.

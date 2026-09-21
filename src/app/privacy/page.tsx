@@ -51,8 +51,8 @@ export default function PrivacyPage() {
         </div>
 
         <p className="text-sm text-app-muted leading-relaxed">
-          Kebijakan Privasi ini menjelaskan bagaimana Tempelink (<strong className="text-app-main">"kami"</strong>,{' '}
-          <strong className="text-app-main">"layanan"</strong>) menangani informasi yang berkaitan dengan
+          Kebijakan Privasi ini menjelaskan bagaimana Tempelink (<strong className="text-app-main">&quot;kami&quot;</strong>,{' '}
+          <strong className="text-app-main">&quot;layanan&quot;</strong>) menangani informasi yang berkaitan dengan
           penggunaan layanan kami di <strong className="text-app-main">tempelink.vercel.app</strong>.
           Dengan menggunakan Tempelink, Anda menyatakan setuju dengan praktik yang dijelaskan
           dalam kebijakan ini.

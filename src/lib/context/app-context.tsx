@@ -20,46 +20,54 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 const THEME_STORAGE_KEY = 'tempelink_theme_mode';
 const LANG_STORAGE_KEY = 'tempelink_lang_pref';
 
+const applyThemeClass = (newTheme: ThemeMode) => {
+  if (typeof document !== 'undefined') {
+    const root = document.documentElement;
+    if (newTheme === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
+    } else {
+      root.classList.add('light');
+      root.classList.remove('dark');
+    }
+  }
+};
+
+const applyLanguageAttr = (newLang: Language) => {
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('lang', newLang);
+  }
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [theme, setThemeState] = useState<ThemeMode>('dark');
   const [language, setLanguageState] = useState<Language>('id');
-  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     try {
       const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode | null;
       if (storedTheme === 'dark' || storedTheme === 'light') {
-        setThemeState(storedTheme);
         applyThemeClass(storedTheme);
+        queueMicrotask(() => {
+          setThemeState(storedTheme);
+        });
       } else {
         applyThemeClass('dark');
       }
 
       const storedLang = localStorage.getItem(LANG_STORAGE_KEY) as Language | null;
       if (storedLang === 'id' || storedLang === 'en') {
-        setLanguageState(storedLang);
+        applyLanguageAttr(storedLang);
+        queueMicrotask(() => {
+          setLanguageState(storedLang);
+        });
       }
     } catch {
-      // Fallback to default
       applyThemeClass('dark');
     }
-    setIsHydrated(true);
   }, []);
-
-  const applyThemeClass = (newTheme: ThemeMode) => {
-    if (typeof document !== 'undefined') {
-      const root = document.documentElement;
-      if (newTheme === 'dark') {
-        root.classList.add('dark');
-        root.classList.remove('light');
-      } else {
-        root.classList.add('light');
-        root.classList.remove('dark');
-      }
-    }
-  };
 
   const setTheme = (newTheme: ThemeMode) => {
     setThemeState(newTheme);
@@ -77,6 +85,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const setLanguage = (newLang: Language) => {
     setLanguageState(newLang);
+    applyLanguageAttr(newLang);
     try {
       localStorage.setItem(LANG_STORAGE_KEY, newLang);
     } catch {

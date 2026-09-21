@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useApp } from '@/lib/context/app-context';
+import { FaqJsonLd } from '@/components/seo-structured-data';
 
 interface FaqItem {
   qKey: string;
@@ -24,12 +25,22 @@ export const FaqSection: React.FC = () => {
   const { t } = useApp();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
+  const structuredFaqs = useMemo(
+    () =>
+      FAQ_ITEMS.map((item) => ({
+        question: t(item.qKey as Parameters<typeof t>[0]),
+        answer: t(item.aKey as Parameters<typeof t>[0]),
+      })),
+    [t]
+  );
+
   const toggle = (idx: number) => {
     setOpenIndex(openIndex === idx ? null : idx);
   };
 
   return (
-    <section className="w-full border-t border-app pt-10 pb-4">
+    <section id="faq" className="w-full border-t border-app pt-10 pb-4">
+      <FaqJsonLd faqs={structuredFaqs} />
       <h2 className="text-xl sm:text-2xl font-black text-app-main text-center mb-8 tracking-tight">
         {t('faqTitle')}
       </h2>

@@ -8,7 +8,7 @@ import {
   getBaseUrl,
   PLATFORM_SEO_REGISTRY,
 } from '@/lib/seo/platform-seo-data';
-import { FaqJsonLd, WebAppJsonLd } from '@/components/seo-structured-data';
+import { FaqJsonLd, WebAppJsonLd, BreadcrumbJsonLd } from '@/components/seo-structured-data';
 import {
   Video,
   Film,
@@ -109,6 +109,12 @@ export default async function PlatformLandingPage({ params }: PageProps) {
   return (
     <div className="flex flex-col min-h-screen bg-app-main text-app-main transition-colors duration-200">
       <WebAppJsonLd url={canonicalUrl} name={config.title} description={config.description} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Beranda', url: baseUrl },
+          { name: `${config.name} Downloader`, url: canonicalUrl },
+        ]}
+      />
       <FaqJsonLd faqs={config.faqs} />
 
       {/* Header */}

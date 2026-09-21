@@ -58,12 +58,16 @@ describe('Phase 8 — SEO, Platform Landing Pages & Discoverability', () => {
   });
 
   describe('2. Sitemap Generation', () => {
-    it('generates a valid sitemap containing exactly 7 canonical routes', () => {
+    it('generates a valid sitemap containing all 11 canonical routes', () => {
       const sitemapEntries = sitemap();
-      expect(sitemapEntries).toHaveLength(7);
+      expect(sitemapEntries).toHaveLength(11);
 
       const urls = sitemapEntries.map((e) => e.url);
       expect(urls).toContain(baseUrl);
+      expect(urls).toContain(`${baseUrl}/about`);
+      expect(urls).toContain(`${baseUrl}/privacy`);
+      expect(urls).toContain(`${baseUrl}/terms`);
+      expect(urls).toContain(`${baseUrl}/contact`);
       expectedSlugs.forEach((slug) => {
         expect(urls).toContain(`${baseUrl}/${slug}`);
       });
