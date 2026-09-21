@@ -10,6 +10,10 @@
 let _pool: any = null;
 let _initialized = false;
 
+function hasDatabase(): boolean {
+  return !!(process.env.DATABASE_URL || '').trim();
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getPool(): Promise<any> {
   if (_pool) return _pool;
@@ -30,8 +34,8 @@ async function getPool(): Promise<any> {
       connectionString,
       ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
       max: 5,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
+      idleTimeoutMillis: 20000,
+      connectionTimeoutMillis: 2000, // fail fast: 2s instead of 10s
     });
 
     return _pool;
@@ -72,10 +76,11 @@ export async function recordDownloadEvent(opts: {
   idempotencyKey: string;
   platform?: string;
 }): Promise<boolean> {
-  await initAnalyticsSchema();
-  const pool = await getPool();
+  if (!hasDatabase()) return false;
 
   try {
+    await initAnalyticsSchema();
+    const pool = await getPool();
     const result = await pool.query(
       `INSERT INTO tempelink_download_events (idempotency_key, platform)
        VALUES ($1, $2)
@@ -91,14 +96,19 @@ export async function recordDownloadEvent(opts: {
 
 /**
  * Returns the total number of successful download events.
- * Uses COUNT(*) — O(1) with the table's internal stats for small-to-medium datasets.
+ * Returns null if the database is not configured (caller decides how to handle).
  */
-export async function getTotalDownloads(): Promise<number> {
-  await initAnalyticsSchema();
-  const pool = await getPool();
+export async function getTotalDownloads(): Promise<number | null> {
+  if (!hasDatabase()) return null;
 
-  const result = await pool.query(
-    'SELECT COUNT(*) AS total FROM tempelink_download_events'
-  );
-  return parseInt(result.rows[0]?.total ?? '0', 10);
+  try {
+    await initAnalyticsSchema();
+    const pool = await getPool();
+    const result = await pool.query(
+      'SELECT COUNT(*) AS total FROM tempelink_download_events'
+    );
+    return parseInt(result.rows[0]?.total ?? '0', 10);
+  } catch {
+    return null;
+  }
 }

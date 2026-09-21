@@ -26,12 +26,14 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // null = DB not configured, return 0 gracefully
     const total = await getTotalDownloads();
-    cachedCount = total;
+    const count = total ?? 0;
+    cachedCount = count;
     cacheExpiresAt = now + CACHE_TTL_MS;
 
     return NextResponse.json(
-      { totalDownloads: total },
+      { totalDownloads: count },
       {
         headers: {
           'Cache-Control': 'no-store',
