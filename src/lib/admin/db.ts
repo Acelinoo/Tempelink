@@ -174,14 +174,13 @@ export type Period = 'today' | 'week' | 'month' | 'year' | 'all';
 function periodSql(period: Period): string {
   switch (period) {
     case 'today':
-      return `created_at >= NOW() AT TIME ZONE 'Asia/Jakarta' - INTERVAL '0 days'
-              AND created_at >= DATE_TRUNC('day', NOW() AT TIME ZONE 'Asia/Jakarta') AT TIME ZONE 'Asia/Jakarta'`;
+      return `(created_at AT TIME ZONE 'Asia/Jakarta') >= DATE_TRUNC('day', NOW() AT TIME ZONE 'Asia/Jakarta')`;
     case 'week':
-      return `created_at >= DATE_TRUNC('week', NOW() AT TIME ZONE 'Asia/Jakarta') AT TIME ZONE 'Asia/Jakarta'`;
+      return `(created_at AT TIME ZONE 'Asia/Jakarta') >= DATE_TRUNC('week', NOW() AT TIME ZONE 'Asia/Jakarta')`;
     case 'month':
-      return `created_at >= DATE_TRUNC('month', NOW() AT TIME ZONE 'Asia/Jakarta') AT TIME ZONE 'Asia/Jakarta'`;
+      return `(created_at AT TIME ZONE 'Asia/Jakarta') >= DATE_TRUNC('month', NOW() AT TIME ZONE 'Asia/Jakarta')`;
     case 'year':
-      return `created_at >= DATE_TRUNC('year', NOW() AT TIME ZONE 'Asia/Jakarta') AT TIME ZONE 'Asia/Jakarta'`;
+      return `(created_at AT TIME ZONE 'Asia/Jakarta') >= DATE_TRUNC('year', NOW() AT TIME ZONE 'Asia/Jakarta')`;
     default:
       return '1=1';
   }
@@ -325,8 +324,7 @@ export async function listDownloadLogs(
 
   const rowsResult = await pool.query(
     `SELECT id, url, platform, downloader_type, status, error_message,
-            created_at AT TIME ZONE 'Asia/Jakarta' AS created_at,
-            completed_at AT TIME ZONE 'Asia/Jakarta' AS completed_at
+            created_at, completed_at
      FROM tempelink_download_logs
      ${where}
      ORDER BY created_at DESC
@@ -413,8 +411,8 @@ export async function exportDownloadsCsv(
 
   const result = await pool.query(
     `SELECT id, url, platform, downloader_type, status, error_message,
-            (created_at AT TIME ZONE 'Asia/Jakarta')::text AS created_at,
-            (completed_at AT TIME ZONE 'Asia/Jakarta')::text AS completed_at
+            TO_CHAR(created_at AT TIME ZONE 'Asia/Jakarta', 'YYYY-MM-DD HH24:MI:SS') AS created_at,
+            TO_CHAR(completed_at AT TIME ZONE 'Asia/Jakarta', 'YYYY-MM-DD HH24:MI:SS') AS completed_at
      FROM tempelink_download_logs ${where}
      ORDER BY created_at DESC
      LIMIT 10000`,
