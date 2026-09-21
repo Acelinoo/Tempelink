@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getBaseUrl } from '@/lib/seo/platform-seo-data';
 
 const baseUrl = getBaseUrl();
@@ -25,10 +26,15 @@ export default function AboutPage() {
       {/* Header */}
       <header className="w-full border-b border-app bg-app-surface/90 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2 hover:opacity-90 transition-opacity">
-            <div className="w-7 h-7 rounded-lg bg-app-cta flex items-center justify-center font-black text-sm text-[var(--accent-cta-text)]">
-              T
-            </div>
+          <Link href="/" className="flex items-center space-x-2.5 hover:opacity-90 transition-opacity">
+            <Image
+              src="/logo.png"
+              alt="Tempelink Logo"
+              width={28}
+              height={28}
+              className="w-7 h-7 object-contain rounded-md shadow-sm flex-shrink-0"
+              priority
+            />
             <span className="font-extrabold tracking-tight text-base text-app-main">Tempelink</span>
           </Link>
           <nav className="flex items-center space-x-4 text-xs text-app-muted">

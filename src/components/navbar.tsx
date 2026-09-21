@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { History, Moon, Sun, Languages } from 'lucide-react';
 import { useApp } from '@/lib/context/app-context';
 
@@ -17,22 +18,24 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenHistory, historyCount }) =
     <header className="w-full border-b border-app bg-app-surface/90 backdrop-blur-md sticky top-0 z-40 transition-colors duration-200">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         {/* Brand Logo & Title */}
-        <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-lg bg-app-cta flex items-center justify-center font-black text-lg shadow-sm text-[var(--accent-cta-text)]">
-            T
-          </div>
+        <Link href="/" className="flex items-center space-x-2.5 hover:opacity-90 transition-opacity">
+          <Image
+            src="/logo.png"
+            alt="Tempelink Logo"
+            width={34}
+            height={34}
+            className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-lg flex-shrink-0"
+            priority
+          />
           <div className="flex flex-col">
-            <span className="font-extrabold text-lg tracking-tight text-app-main flex items-center gap-1.5">
+            <span className="font-extrabold text-base sm:text-lg tracking-tight text-app-main leading-tight">
               TEMPELINK
-              <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded border border-app bg-app-elevated text-app-muted">
-                v1.0
-              </span>
             </span>
-            <span className="text-xs text-app-subtle font-medium">
+            <span className="hidden sm:block text-[11px] sm:text-xs text-app-subtle font-medium leading-none mt-0.5">
               {t('brandSubtitle')}
             </span>
           </div>
-        </div>
+        </Link>
 
         {/* Center Nav Links (desktop only) */}
         <nav className="hidden md:flex items-center space-x-5 text-xs text-app-muted">

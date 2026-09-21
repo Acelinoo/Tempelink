@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -12,10 +13,14 @@ export default function NotFound() {
     <div className="flex flex-col min-h-screen bg-app-main text-app-main items-center justify-center px-4">
       <div className="max-w-md w-full text-center space-y-6">
         {/* Logo */}
-        <Link href="/" className="inline-flex items-center space-x-2 hover:opacity-90 transition-opacity">
-          <div className="w-9 h-9 rounded-lg bg-app-cta flex items-center justify-center font-black text-lg text-[var(--accent-cta-text)]">
-            T
-          </div>
+        <Link href="/" className="inline-flex items-center space-x-2.5 hover:opacity-90 transition-opacity">
+          <Image
+            src="/logo.png"
+            alt="Tempelink Logo"
+            width={40}
+            height={40}
+            className="w-10 h-10 object-contain rounded-lg shadow-sm"
+          />
           <span className="font-extrabold text-xl tracking-tight text-app-main">Tempelink</span>
         </Link>
 
