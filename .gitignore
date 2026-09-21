@@ -44,3 +44,5 @@ next-env.d.ts
 # local persistent storage
 .data/
 scratch/
+.prisma-composer/
+.alchemy/
