@@ -6,12 +6,14 @@ import { validateApiRequest, readJsonBody } from '@/lib/security/api-guard';
 import { verifyBotChallenge } from '@/lib/security/bot-challenge';
 import { Logger } from '@/lib/telemetry/logger';
 import { trackEvent } from '@/lib/telemetry/events';
+import { createDownloadLog, updateDownloadLogFull, updateDownloadLog } from '@/lib/admin/db';
 
 export async function POST(req: NextRequest) {
   const correlationId =
     req.headers.get('x-correlation-id') || Logger.generateCorrelationId();
   const clientIp = getClientIp(req);
   const startTime = Date.now();
+  let logId: string | null = null; // outer scope so catch can update
 
   try {
     // 1. Enforce API request guard (URL length, Content-Type, Content-Length)
@@ -34,6 +36,17 @@ export async function POST(req: NextRequest) {
       correlationId,
       eventType: 'resolve_started',
     });
+
+    // 5a. Create pending download log (non-fatal — DB failure must not break downloader)
+    try {
+      logId = await createDownloadLog({
+        url: body.url,
+        platform: null, // will be updated on success
+        downloaderType: null,
+      });
+    } catch {
+      // analytics failure is non-fatal
+    }
 
     // 5. Coordinate resolver pipeline with caching & single-flight coalescing
     const { response: resolvedMedia, source: cacheSource } =
@@ -58,6 +71,14 @@ export async function POST(req: NextRequest) {
       cacheStatus: cacheHeader,
       durationMs: Date.now() - startTime,
     });
+
+    // Update log to success with full metadata (non-fatal)
+    if (logId) {
+      updateDownloadLogFull(logId, 'success', {
+        platform: resolvedMedia.platform ?? null,
+        downloaderType: resolvedMedia.mediaType ?? null,
+      }).catch(() => {});
+    }
 
     return NextResponse.json(
       {
@@ -95,6 +116,9 @@ export async function POST(req: NextRequest) {
         durationMs,
       });
 
+      // Update log to failed (non-fatal)
+      if (logId) updateDownloadLog(logId, 'failed', err.code).catch(() => {});
+
       const headers: Record<string, string> = {
         'X-Correlation-ID': correlationId,
         'Cache-Control': 'no-store, must-revalidate',
@@ -115,6 +139,9 @@ export async function POST(req: NextRequest) {
       clientIp,
       durationMs,
     });
+
+    // Update log to failed (non-fatal)
+    if (logId) updateDownloadLog(logId, 'failed', 'INTERNAL_ERROR').catch(() => {});
 
     const fallbackError = new TempelinkError('INTERNAL_ERROR');
     return NextResponse.json(fallbackError.toJSON(correlationId), {
