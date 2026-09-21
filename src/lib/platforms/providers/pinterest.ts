@@ -119,7 +119,7 @@ export class PinterestProvider extends BasePlatformProvider {
 
     const cleanTargetUrl = this.cleanUrl(url);
     const endpointUrl = new URL(
-      `/?url=${encodeURIComponent(cleanTargetUrl)}`,
+      `/pinterest?url=${encodeURIComponent(cleanTargetUrl)}`,
       serverConfig.pinterest.baseUrl
     ).toString();
 
@@ -251,10 +251,16 @@ export class PinterestProvider extends BasePlatformProvider {
       }
     } else if (payload && typeof payload === 'object') {
       const obj = payload as Record<string, unknown>;
-      if (obj.status === 'error' || obj.status === false || obj.error === true) {
+      if (
+        obj.status === 'error' ||
+        obj.status === false ||
+        obj.error === true ||
+        obj.success === false
+      ) {
         throw new TempelinkError(
           'CONTENT_UNAVAILABLE',
-          (obj.message as string) ||
+          (typeof obj.error === 'string' ? obj.error : null) ||
+            (typeof obj.message === 'string' ? obj.message : null) ||
             'Pin Pinterest tidak ditemukan atau tidak dapat diakses.'
         );
       }
@@ -286,7 +292,60 @@ export class PinterestProvider extends BasePlatformProvider {
     } else if (payload && typeof payload === 'object') {
       const obj = payload as Record<string, unknown>;
 
-      // Parse video streams if present
+      // Format B: Provider schema with obj.data
+      if (obj.data && typeof obj.data === 'object') {
+        const d = obj.data as Record<string, unknown>;
+        const typeHint = (obj.type as string) || (d.type as string);
+
+        // Check if pages or carousel array exists
+        const multiItems = (d.pages || d.carousel) as unknown[];
+        if (Array.isArray(multiItems) && multiItems.length > 0) {
+          for (const p of multiItems) {
+            if (p && typeof p === 'object') {
+              const pageObj = p as Record<string, unknown>;
+              const pageUrl =
+                (pageObj.url as string) ||
+                (pageObj.image as string) ||
+                (pageObj.video as string);
+              if (typeof pageUrl === 'string' && pageUrl.startsWith('http')) {
+                const isVid =
+                  pageUrl.includes('.mp4') || (pageObj.type as string) === 'video';
+                rawItems.push({
+                  url: pageUrl,
+                  type: isVid ? 'video' : 'image',
+                  quality:
+                    (pageObj.quality as string) || (isVid ? '720p' : 'original'),
+                  width:
+                    typeof pageObj.width === 'number' ? pageObj.width : null,
+                  height:
+                    typeof pageObj.height === 'number' ? pageObj.height : null,
+                });
+              }
+            }
+          }
+        }
+
+        if (typeof d.url === 'string' && d.url.startsWith('http')) {
+          const isVid = typeHint === 'video' || d.url.includes('.mp4');
+          rawItems.push({
+            url: d.url,
+            type: isVid ? 'video' : 'image',
+            quality: (d.quality as string) || (isVid ? '720p' : 'original'),
+            width: typeof d.width === 'number' ? d.width : null,
+            height: typeof d.height === 'number' ? d.height : null,
+          });
+        } else if (typeof d.image === 'string' && d.image.startsWith('http')) {
+          rawItems.push({
+            url: d.image,
+            type: 'image',
+            quality: 'original',
+            width: typeof d.width === 'number' ? d.width : null,
+            height: typeof d.height === 'number' ? d.height : null,
+          });
+        }
+      }
+
+      // Parse video streams if present at root
       if (Array.isArray(obj.videos)) {
         for (const item of obj.videos) {
           if (item && typeof item.url === 'string') {
@@ -307,7 +366,7 @@ export class PinterestProvider extends BasePlatformProvider {
         });
       }
 
-      // Parse image streams
+      // Parse image streams if present at root
       if (Array.isArray(obj.images)) {
         for (const item of obj.images) {
           if (item && typeof item.url === 'string') {
@@ -324,7 +383,7 @@ export class PinterestProvider extends BasePlatformProvider {
           type: 'image',
           quality: 'original',
         });
-      } else if (typeof obj.url === 'string') {
+      } else if (typeof obj.url === 'string' && rawItems.length === 0) {
         const isVid =
           obj.url.includes('.mp4') || (obj.type as string) === 'video';
         rawItems.push({
@@ -347,11 +406,21 @@ export class PinterestProvider extends BasePlatformProvider {
         ? (payload as Record<string, unknown>)
         : {};
 
+    const dataObj =
+      payloadObj &&
+      typeof payloadObj.data === 'object' &&
+      payloadObj.data !== null
+        ? (payloadObj.data as Record<string, unknown>)
+        : {};
+
     const title =
+      (dataObj.title as string) ||
       (payloadObj.title as string) ||
       (payloadObj.description as string) ||
       `Pinterest Pin (${mediaId})`;
     const thumbnail =
+      (dataObj.thumbnail as string) ||
+      (dataObj.thumb as string) ||
       (payloadObj.thumbnail as string) ||
       (payloadObj.thumb as string) ||
       rawItems[0].url;

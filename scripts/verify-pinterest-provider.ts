@@ -15,7 +15,7 @@ async function verifyPinterest() {
   console.log(`[CONFIG] Host: ${serverConfig.pinterest.apiHost}`);
 
   const testUrlString =
-    process.argv[2] || 'https://www.pinterest.com/pin/70437488608239/';
+    process.argv[2] || 'https://pin.it/69kJKgnUy';
   console.log(`\n[STEP 1] Testing URL: ${testUrlString}`);
 
   const provider = new PinterestProvider();

@@ -169,10 +169,10 @@ export const serverConfig = {
     },
     apiHost:
       process.env.PINTEREST_PROVIDER_API_HOST ||
-      'pinterest-media-download1.p.rapidapi.com',
+      'pinterest-video-and-image-downloader.p.rapidapi.com',
     baseUrl:
       process.env.PINTEREST_PROVIDER_BASE_URL ||
-      'https://pinterest-media-download1.p.rapidapi.com',
+      'https://pinterest-video-and-image-downloader.p.rapidapi.com',
     resolveTimeoutMs: Number(process.env.PINTEREST_RESOLVE_TIMEOUT_MS) || 10000,
     maxRetries: Number(process.env.PINTEREST_MAX_RETRIES) || 2,
   },

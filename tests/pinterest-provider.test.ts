@@ -238,5 +238,77 @@ describe('PinterestProvider — Resolution Engine & Capabilities', () => {
         'https://i.pinimg.com/valid.jpg'
       );
     });
+
+    it('resolves video pin from pinterest-video-and-image-downloader provider schema', async () => {
+      const originalKey = serverConfig.pinterest.apiKey;
+      serverConfig.pinterest.apiKey = 'test_rapidapi_key';
+
+      const mockPayload = {
+        success: true,
+        type: 'video',
+        pinType: 'storyPin',
+        version: '8.0.0',
+        data: {
+          url: 'https://v1.pinimg.com/videos/iht/720p/c2/4d/cf/c24dcfc9f7c5d0463893f71a972aab76.mp4',
+          thumbnail: 'https://i.pinimg.com/originals/c8/10/7c/c8107cfa2bfb3164a51e604f21db59de.jpg',
+          title: 'Delicious Recipe',
+          width: 720,
+          height: 1280,
+          duration: 15000,
+          pages: null,
+          carousel: null,
+        },
+      };
+
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockPayload,
+      } as unknown as Response);
+
+      const url = new URL('https://pin.it/69kJKgnUy');
+      const resolution = await provider.resolve(url);
+
+      expect(resolution.mediaId).toBe('69kJKgnUy');
+      expect(resolution.mediaType).toBe('video');
+      expect(resolution.title).toBe('Delicious Recipe');
+      expect(resolution.capabilities.length).toBe(1);
+      expect(resolution.capabilities[0].type).toBe('video');
+      expect(resolution.capabilities[0].format).toBe('mp4');
+
+      serverConfig.pinterest.apiKey = originalKey;
+    });
+
+    it('handles failure response with success: false and error message', async () => {
+      const originalKey = serverConfig.pinterest.apiKey;
+      serverConfig.pinterest.apiKey = 'test_rapidapi_key';
+
+      const mockPayload = {
+        success: false,
+        version: '8.0.0',
+        error: 'Not able to get data from pinterest',
+      };
+
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => mockPayload,
+      } as unknown as Response);
+
+      const url = new URL('https://www.pinterest.com/pin/1095852521805152932/');
+
+      await expect(provider.resolve(url)).rejects.toThrowError(TempelinkError);
+
+      try {
+        await provider.resolve(url);
+      } catch (err: unknown) {
+        expect((err as TempelinkError).code).toBe('CONTENT_UNAVAILABLE');
+        expect((err as TempelinkError).message).toBe(
+          'Not able to get data from pinterest'
+        );
+      } finally {
+        serverConfig.pinterest.apiKey = originalKey;
+      }
+    });
   });
 });
