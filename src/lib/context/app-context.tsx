@@ -113,7 +113,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
 export function useApp(): AppContextType {
   const context = useContext(AppContext);
   if (!context) {
-    throw new Error('useApp must be used within an AppProvider');
+    // Safe fallback for SSR / error boundaries rendered outside AppProvider
+    return {
+      theme: 'dark',
+      setTheme: () => {},
+      toggleTheme: () => {},
+      language: 'id',
+      setLanguage: () => {},
+      toggleLanguage: () => {},
+      t: (key: keyof Translations): string =>
+        translations.id[key] ?? String(key),
+    };
   }
   return context;
 }
