@@ -23,6 +23,8 @@ export const WebSiteJsonLd: React.FC<WebSiteSchemaProps> = ({
 
   return (
     <script
+      key="website-jsonld"
+      id="website-jsonld"
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
@@ -57,6 +59,8 @@ export const WebAppJsonLd: React.FC<WebAppSchemaProps> = ({
 
   return (
     <script
+      key="webapp-jsonld"
+      id="webapp-jsonld"
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
@@ -85,6 +89,8 @@ export const FaqJsonLd: React.FC<FaqSchemaProps> = ({ faqs }) => {
 
   return (
     <script
+      key="faq-jsonld"
+      id="faq-jsonld"
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
@@ -116,6 +122,8 @@ export const BreadcrumbJsonLd: React.FC<BreadcrumbSchemaProps> = ({ items }) => 
 
   return (
     <script
+      key="breadcrumb-jsonld"
+      id="breadcrumb-jsonld"
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />

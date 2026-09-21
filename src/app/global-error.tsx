@@ -1,47 +1,115 @@
 'use client';
 
-import Link from 'next/link';
-import { useEffect } from 'react';
-
-interface ErrorProps {
+interface GlobalErrorProps {
   error: Error & { digest?: string };
   reset: () => void;
 }
 
-export default function GlobalError({ error, reset }: ErrorProps) {
-  useEffect(() => {
-    // Log error tanpa expose detail ke UI
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[Tempelink Error]', error.message);
-    }
-  }, [error]);
-
+export default function GlobalError({ reset }: GlobalErrorProps) {
   return (
     <html lang="id">
-      <body className="min-h-screen flex flex-col items-center justify-center bg-[#0A0A0A] text-[#F5F5F5] px-4">
-        <div className="max-w-md w-full text-center space-y-6">
-          <div className="w-12 h-12 rounded-xl bg-[#005691] flex items-center justify-center font-black text-2xl text-white mx-auto">
+      <head>
+        <title>Terjadi Kesalahan — Tempelink</title>
+      </head>
+      <body
+        style={{
+          margin: 0,
+          padding: '24px',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#0A0A0A',
+          color: '#F5F5F5',
+          fontFamily:
+            'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          textAlign: 'center',
+        }}
+      >
+        <div style={{ maxWidth: '420px', width: '100%' }}>
+          <div
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              backgroundColor: '#005691',
+              color: '#FFFFFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '22px',
+              fontWeight: 900,
+              margin: '0 auto 16px',
+            }}
+          >
             T
           </div>
-          <div className="space-y-2">
-            <h1 className="text-xl font-black text-white">Terjadi Kesalahan</h1>
-            <p className="text-sm text-[#C0C0C0] leading-relaxed">
-              Maaf, terjadi kesalahan yang tidak terduga. Tim kami akan segera menanganinya.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <h1
+            style={{
+              fontSize: '20px',
+              fontWeight: 800,
+              margin: '0 0 8px',
+              color: '#FFFFFF',
+            }}
+          >
+            Terjadi Kesalahan
+          </h1>
+          <p
+            style={{
+              fontSize: '14px',
+              color: '#A0A0A0',
+              lineHeight: 1.6,
+              margin: '0 0 24px',
+            }}
+          >
+            Maaf, terjadi kendala teknis pada sistem. Silakan coba muat ulang halaman atau kembali ke beranda.
+          </p>
+          <div
+            style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+            }}
+          >
             <button
-              onClick={reset}
-              className="px-5 py-2.5 rounded-xl bg-[#005691] text-white text-sm font-bold hover:bg-[#004A7C] transition-colors"
+              type="button"
+              onClick={() => reset()}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '10px',
+                backgroundColor: '#005691',
+                color: '#FFFFFF',
+                fontSize: '14px',
+                fontWeight: 700,
+                border: 'none',
+                cursor: 'pointer',
+              }}
             >
               Coba Lagi
             </button>
-            <Link
-              href="/"
-              className="px-5 py-2.5 rounded-xl border border-[#303030] bg-[#1A1A1A] text-[#F5F5F5] text-sm font-medium hover:bg-[#262626] transition-colors"
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+                  window.location.href = '/';
+                }
+              }}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '10px',
+                backgroundColor: '#1A1A1A',
+                color: '#F5F5F5',
+                fontSize: '14px',
+                fontWeight: 500,
+                border: '1px solid #333333',
+                cursor: 'pointer',
+              }}
             >
               Kembali ke Beranda
-            </Link>
+            </button>
           </div>
         </div>
       </body>
