@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s | Tempelink",
   },
   description:
-    "Unduh video, audio, dan media dari TikTok, Instagram, YouTube, X, Facebook, dan Pinterest dengan resolusi terverifikasi tanpa iklan jebakan.",
+    "Tempelink adalah utilitas pengunduh media universal untuk TikTok, Instagram, YouTube, X, Facebook, dan Pinterest. Unduh video, audio, dan foto dengan resolusi asli langsung ke perangkat Anda.",
   keywords: [
     "universal media downloader",
     "tiktok downloader",
@@ -74,8 +74,8 @@ export const metadata: Metadata = {
 import { AppProvider } from "@/lib/context/app-context";
 
 export const viewport: Viewport = {
-  themeColor: "#233D4D",
-  width: "device-width",
+  themeColor: '#005691',
+  width: 'device-width',
   initialScale: 1,
 };
 

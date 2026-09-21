@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { History, Moon, Sun, Languages } from 'lucide-react';
 import { useApp } from '@/lib/context/app-context';
 
@@ -32,6 +33,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenHistory, historyCount }) =
             </span>
           </div>
         </div>
+
+        {/* Center Nav Links (desktop only) */}
+        <nav className="hidden md:flex items-center space-x-5 text-xs text-app-muted">
+          <Link href="/about" className="hover:text-app-main transition-colors">
+            Tentang
+          </Link>
+          <Link href="/contact" className="hover:text-app-main transition-colors">
+            Kontak
+          </Link>
+        </nav>
 
         {/* Right Actions */}
         <div className="flex items-center space-x-2 sm:space-x-3">

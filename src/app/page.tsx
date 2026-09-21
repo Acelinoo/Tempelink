@@ -472,24 +472,32 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="w-full border-t border-app py-6 text-center text-xs text-app-subtle bg-app-surface/50">
-        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>{t('footerCopyright')}</span>
-          <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3">
-            <span className="font-mono text-[11px] text-app-cta">
-              {t('footerTagline')}
-            </span>
-            <span className="hidden sm:inline text-app-surface">|</span>
-            <span className="text-[11px]">
-              {t('footerMadeBy')}{' '}
-              <a
-                href="https://acelino.my.id"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-app-cta hover:underline transition-all"
-              >
-                acelino.my.id
-              </a>
-            </span>
+        <div className="max-w-6xl mx-auto px-4 flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span>{t('footerCopyright')}</span>
+            <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3">
+              <span className="font-mono text-[11px] text-app-cta">
+                {t('footerTagline')}
+              </span>
+              <span className="hidden sm:inline text-app-surface">|</span>
+              <span className="text-[11px]">
+                {t('footerMadeBy')}{' '}
+                <a
+                  href="https://acelino.my.id"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-app-cta hover:underline transition-all"
+                >
+                  acelino.my.id
+                </a>
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center justify-center gap-4 pt-1 border-t border-app">
+            <Link href="/about" className="hover:text-app-cta transition-colors">Tentang</Link>
+            <Link href="/privacy" className="hover:text-app-cta transition-colors">Privasi</Link>
+            <Link href="/terms" className="hover:text-app-cta transition-colors">Ketentuan</Link>
+            <Link href="/contact" className="hover:text-app-cta transition-colors">Kontak</Link>
           </div>
         </div>
       </footer>
