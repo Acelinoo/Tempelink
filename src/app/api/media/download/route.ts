@@ -8,6 +8,7 @@ import { formatContentDisposition } from '@/lib/security/filename';
 import { validateApiRequest, readJsonBody } from '@/lib/security/api-guard';
 import { Logger } from '@/lib/telemetry/logger';
 import { trackEvent } from '@/lib/telemetry/events';
+import { recordDownloadEvent } from '@/lib/analytics/db';
 
 const ALLOWED_MEDIA_MIME_TYPES = new Set([
   'video/mp4',
@@ -82,6 +83,16 @@ export async function POST(req: NextRequest) {
       eventType: 'download_started',
       capabilityId: body.capabilityId,
     });
+
+    // Record analytics event for direct-URL downloads.
+    // Idempotency key = token signature (the last segment of the signed token).
+    // A valid token can only be generated server-side, so this is trustworthy.
+    const tokenParts = body.downloadToken.split('.');
+    const idempotencyKey = `post:${tokenParts[tokenParts.length - 1]}`;
+    recordDownloadEvent({
+      idempotencyKey,
+      platform: body.capabilityId?.split('_')[0],
+    }).catch(() => { /* non-fatal */ });
 
     return NextResponse.json(
       {
@@ -226,6 +237,15 @@ export async function GET(req: NextRequest) {
         streamHeaders.set('Pragma', 'no-cache');
         streamHeaders.set('Expires', '0');
         streamHeaders.set('X-Content-Type-Options', 'nosniff');
+
+        // Record analytics event for streamed downloads.
+        // Idempotency key = token signature — prevents duplicate counting on retries.
+        const streamTokenParts = token.split('.');
+        const streamIdempotencyKey = `get:${streamTokenParts[streamTokenParts.length - 1]}`;
+        recordDownloadEvent({
+          idempotencyKey: streamIdempotencyKey,
+          platform: payload.capabilityId?.split('_')[0],
+        }).catch(() => { /* non-fatal */ });
 
         return new Response(upstreamRes.body, {
           status: 200,

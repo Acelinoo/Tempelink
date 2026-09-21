@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { History, Moon, Sun, Languages } from 'lucide-react';
 import { useApp } from '@/lib/context/app-context';
+import { StatsPopup } from './stats-popup';
 
 interface NavbarProps {
   onOpenHistory: () => void;
@@ -13,29 +14,48 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenHistory, historyCount }) => {
   const { theme, toggleTheme, language, toggleLanguage, t } = useApp();
+  const [showStats, setShowStats] = useState(false);
+  const logoButtonRef = useRef<HTMLButtonElement>(null);
 
   return (
     <header className="w-full border-b border-app bg-app-surface/90 backdrop-blur-md sticky top-0 z-40 transition-colors duration-200">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        {/* Brand Logo & Title */}
-        <Link href="/" className="flex items-center space-x-2.5 hover:opacity-90 transition-opacity">
-          <Image
-            src="/logo.png"
-            alt="Tempelink Logo"
-            width={34}
-            height={34}
-            className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-lg flex-shrink-0"
-            priority
-          />
-          <div className="flex flex-col">
-            <span className="font-extrabold text-base sm:text-lg tracking-tight text-app-main leading-tight">
-              TEMPELINK
-            </span>
-            <span className="hidden sm:block text-[11px] sm:text-xs text-app-subtle font-medium leading-none mt-0.5">
-              {t('brandSubtitle')}
-            </span>
-          </div>
-        </Link>
+        {/* Brand Logo & Title — click to open stats popup */}
+        <div className="relative">
+          <button
+            ref={logoButtonRef}
+            type="button"
+            onClick={() => setShowStats((v) => !v)}
+            aria-expanded={showStats}
+            aria-haspopup="dialog"
+            aria-label="Lihat statistik Tempelink"
+            className="flex items-center space-x-2.5 hover:opacity-90 transition-opacity cursor-pointer bg-transparent border-0 p-0"
+          >
+            <Image
+              src="/logo.png"
+              alt="Tempelink Logo"
+              width={34}
+              height={34}
+              className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-lg flex-shrink-0"
+              priority
+            />
+            <div className="flex flex-col text-left">
+              <span className="font-extrabold text-base sm:text-lg tracking-tight text-app-main leading-tight">
+                TEMPELINK
+              </span>
+              <span className="hidden sm:block text-[11px] sm:text-xs text-app-subtle font-medium leading-none mt-0.5">
+                {t('brandSubtitle')}
+              </span>
+            </div>
+          </button>
+
+          {showStats && (
+            <StatsPopup
+              anchorRef={logoButtonRef}
+              onClose={() => setShowStats(false)}
+            />
+          )}
+        </div>
 
         {/* Center Nav Links (desktop only) */}
         <nav className="hidden md:flex items-center space-x-5 text-xs text-app-muted">
