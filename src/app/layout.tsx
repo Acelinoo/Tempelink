@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { getBaseUrl } from "@/lib/seo/platform-seo-data";
 import { WebSiteJsonLd } from "@/components/seo-structured-data";
+import { AppProvider } from "@/lib/context/app-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +18,16 @@ const geistMono = Geist_Mono({
 
 const baseUrl = getBaseUrl();
 
+const ADSENSE_CLIENT_ID =
+  process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID ||
+  process.env.ADSENSE_CLIENT_ID ||
+  "ca-pub-5986326818459068";
+
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
+  other: {
+    "google-adsense-account": ADSENSE_CLIENT_ID,
+  },
   title: {
     default: "Tempelink — Universal Media Utility & Downloader",
     template: "%s | Tempelink",
@@ -80,8 +90,6 @@ export const metadata: Metadata = {
   },
 };
 
-import { AppProvider } from "@/lib/context/app-context";
-
 export const viewport: Viewport = {
   themeColor: '#005691',
   width: 'device-width',
@@ -100,6 +108,14 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-app-main text-app-main font-sans transition-colors duration-200">
+        {ADSENSE_CLIENT_ID && (
+          <Script
+            id="google-adsense"
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
         <WebSiteJsonLd
           url={baseUrl}
           name="Tempelink"
