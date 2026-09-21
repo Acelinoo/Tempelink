@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { History, ShieldCheck, Moon, Sun, Languages } from 'lucide-react';
+import { History, Moon, Sun, Languages } from 'lucide-react';
 import { useApp } from '@/lib/context/app-context';
 
 interface NavbarProps {
@@ -17,7 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenHistory, historyCount }) =
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         {/* Brand Logo & Title */}
         <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-lg bg-app-cta flex items-center justify-center font-black text-lg shadow-sm">
+          <div className="w-9 h-9 rounded-lg bg-app-cta flex items-center justify-center font-black text-lg shadow-sm text-[var(--accent-cta-text)]">
             T
           </div>
           <div className="flex flex-col">
@@ -35,12 +35,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenHistory, historyCount }) =
 
         {/* Right Actions */}
         <div className="flex items-center space-x-2 sm:space-x-3">
-          {/* Trust Badge */}
-          <div className="hidden md:flex items-center space-x-1.5 px-2.5 py-1 rounded-full border border-app bg-app-elevated text-xs text-app-muted">
-            <ShieldCheck className="w-3.5 h-3.5 text-app-cta" />
-            <span>{t('adFreeBadge')}</span>
-          </div>
-
           {/* Language Switcher */}
           <button
             type="button"

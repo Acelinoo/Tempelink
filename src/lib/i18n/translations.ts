@@ -3,7 +3,6 @@ export type Language = 'id' | 'en';
 export interface Translations {
   // Navigation
   brandSubtitle: string;
-  adFreeBadge: string;
   historyButton: string;
   historyCountLabel: string;
   themeToggleDark: string;
@@ -105,7 +104,6 @@ export const translations: Record<Language, Translations> = {
   id: {
     // Navigation
     brandSubtitle: 'Platform Utilitas Media Universal',
-    adFreeBadge: 'Bebas Iklan & Pengalihan',
     historyButton: 'Riwayat Unduhan',
     historyCountLabel: 'berkas tersimpan',
     themeToggleDark: 'Beralih ke Mode Gelap',
@@ -159,9 +157,9 @@ export const translations: Record<Language, Translations> = {
     pillarHonestyTitle: 'Kejujuran Resolusi',
     pillarHonestyDesc:
       'Kami menyajikan resolusi asli tanpa rekayasa resolusi tinggi semu (upscaling palsu). Seluruh opsi berasal langsung dari penyedia media.',
-    pillarSafetyTitle: 'Bebas Iklan & Jebakan',
+    pillarSafetyTitle: 'Unduhan Langsung & Transparan',
     pillarSafetyDesc:
-      'Tanpa tautan pengalihan, tanpa iklan pop-up, dan tanpa berkas mencurigakan. Seluruh pengunduhan dilakukan secara langsung dan transparan.',
+      'Tanpa tautan pengalihan tersembunyi dan tanpa berkas mencurigakan. Seluruh pengunduhan dilakukan secara langsung dan dapat dilacak sumbernya.',
     pillarPrivacyTitle: 'Privasi Pengguna Terjamin',
     pillarPrivacyDesc:
       'Dapat digunakan langsung tanpa pendaftaran akun. Riwayat aktivitas hanya disimpan secara lokal di peramban perangkat Anda.',
@@ -213,7 +211,6 @@ export const translations: Record<Language, Translations> = {
   en: {
     // Navigation
     brandSubtitle: 'Universal Media Utility Platform',
-    adFreeBadge: 'Ad-Free & Direct Delivery',
     historyButton: 'Download History',
     historyCountLabel: 'items saved',
     themeToggleDark: 'Switch to Dark Mode',
@@ -267,9 +264,9 @@ export const translations: Record<Language, Translations> = {
     pillarHonestyTitle: 'Resolution Authenticity',
     pillarHonestyDesc:
       'We deliver verified source resolutions without artificial upscaling or deceptive labels. All streams originate directly from source providers.',
-    pillarSafetyTitle: 'Ad-Free & Direct Delivery',
+    pillarSafetyTitle: 'Direct & Transparent Downloads',
     pillarSafetyDesc:
-      'No redirect loops, intrusive advertisements, or malicious wrappers. Media downloads are delivered directly and securely.',
+      'No hidden redirect chains or suspicious file wrappers. All media downloads are delivered directly and with traceable sources.',
     pillarPrivacyTitle: 'User Privacy Guaranteed',
     pillarPrivacyDesc:
       'Use the utility without registration. Your download history is stored locally in your browser and never transmitted to our servers.',

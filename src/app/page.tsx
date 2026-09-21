@@ -27,7 +27,6 @@ import {
   DownloadHistoryItem,
 } from '@/lib/history/local-history';
 import {
-  Zap,
   CheckCircle2,
   ShieldCheck,
   EyeOff,
@@ -255,10 +254,9 @@ export default function HomePage() {
       <main className="flex-1 flex flex-col items-center justify-start px-3 sm:px-6 pt-10 sm:pt-16 pb-16 max-w-4xl mx-auto w-full">
         {/* Hero Section */}
         <div className="text-center mb-6 sm:mb-8 space-y-3">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full border border-app bg-app-surface text-xs font-semibold text-app-cta shadow-sm">
-            <Zap className="w-3.5 h-3.5" />
-            <span>{t('heroBadge')}</span>
-          </div>
+          <p className="text-[11px] sm:text-xs uppercase tracking-widest font-semibold text-app-subtle">
+            {t('heroBadge')}
+          </p>
 
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-app-main max-w-2xl mx-auto leading-tight">
             {t('heroTitle')}
