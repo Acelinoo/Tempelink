@@ -40,18 +40,57 @@ export function verifyPin(input: string): boolean {
 export const SESSION_COOKIE_NAME = 'tempelink_admin_sid';
 const SESSION_TTL_HOURS = Number(process.env.ADMIN_SESSION_TTL_HOURS || '8');
 
-export function generateSessionId(): string {
-  return crypto.randomUUID();
+const SESSION_SECRET = (
+  process.env.DOWNLOAD_SIGNING_SECRET ||
+  process.env.ADMIN_PIN ||
+  'tempelink-admin-session-secret-salt-2026'
+).trim();
+
+export function createSignedSessionToken(): string {
+  const rawId = crypto.randomBytes(16).toString('hex');
+  const exp = Date.now() + SESSION_TTL_HOURS * 3600 * 1000;
+  const payload = `${rawId}.${exp}`;
+  const sig = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('hex');
+  return `${payload}.${sig}`;
+}
+
+export function verifySignedSessionToken(token: string): boolean {
+  if (!token || typeof token !== 'string') return false;
+  const parts = token.split('.');
+  if (parts.length !== 3) return false;
+  const [rawId, expStr, sig] = parts;
+  const exp = Number(expStr);
+  if (isNaN(exp) || exp < Date.now()) return false;
+
+  const payload = `${rawId}.${expStr}`;
+  const expectedSig = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('hex');
+
+  try {
+    const sigBuf = Buffer.from(sig, 'hex');
+    const expectedBuf = Buffer.from(expectedSig, 'hex');
+    if (sigBuf.length !== expectedBuf.length) return false;
+    return crypto.timingSafeEqual(sigBuf, expectedBuf);
+  } catch {
+    return false;
+  }
 }
 
 export async function createSession(): Promise<string> {
-  const sessionId = generateSessionId();
-  await createAdminSession(sessionId, SESSION_TTL_HOURS);
+  const sessionId = createSignedSessionToken();
+  // Asynchronously record session in DB without blocking login if DB is offline or cold
+  createAdminSession(sessionId, SESSION_TTL_HOURS).catch((err) => {
+    console.warn('[Admin Auth] Session DB sync skipped:', err instanceof Error ? err.message : String(err));
+  });
   return sessionId;
 }
 
 export async function checkSession(sessionId: string | undefined): Promise<boolean> {
   if (!sessionId) return false;
+  // 1. Verify cryptographic HMAC signature & expiration (fast, 0ms, zero DB dependency)
+  if (verifySignedSessionToken(sessionId)) {
+    return true;
+  }
+  // 2. Fallback to DB session lookup for legacy raw UUID sessions
   return validateAdminSession(sessionId);
 }
 
@@ -65,13 +104,14 @@ export function buildSetCookieHeader(sessionId: string): string {
   const maxAge = SESSION_TTL_HOURS * 3600;
   const isProduction = process.env.NODE_ENV === 'production';
   const secure = isProduction ? '; Secure' : '';
-  return `${SESSION_COOKIE_NAME}=${sessionId}; HttpOnly; SameSite=Strict; Max-Age=${maxAge}; Path=/admin${secure}`;
+  // CRITICAL: Path must be / so the cookie is available to both /admin and /api/admin/*
+  return `${SESSION_COOKIE_NAME}=${sessionId}; HttpOnly; SameSite=Strict; Max-Age=${maxAge}; Path=/${secure}`;
 }
 
 export function buildClearCookieHeader(): string {
   const isProduction = process.env.NODE_ENV === 'production';
   const secure = isProduction ? '; Secure' : '';
-  return `${SESSION_COOKIE_NAME}=; HttpOnly; SameSite=Strict; Max-Age=0; Path=/admin${secure}`;
+  return `${SESSION_COOKIE_NAME}=; HttpOnly; SameSite=Strict; Max-Age=0; Path=/${secure}`;
 }
 
 /**

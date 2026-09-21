@@ -53,8 +53,13 @@ export async function POST(req: NextRequest) {
         },
       }
     );
-  } catch {
-    return NextResponse.json({ success: false, error: 'Gagal membuat sesi.' }, { status: 500 });
+  } catch (err: unknown) {
+    const detail = err instanceof Error ? err.message : String(err);
+    console.error('[Admin Auth] Session creation failed:', err);
+    return NextResponse.json(
+      { success: false, error: 'Gagal membuat sesi.', detail },
+      { status: 500 }
+    );
   }
 }
 

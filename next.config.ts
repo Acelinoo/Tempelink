@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Ensure pg is bundled properly in serverless environments
+  serverExternalPackages: ["pg"],
+
   // Strip X-Powered-By header to reduce response byte overhead and hide server tech
   poweredByHeader: false,
 

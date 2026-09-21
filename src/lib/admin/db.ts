@@ -19,7 +19,7 @@ async function getAdminPool(): Promise<any> {
   if (_adminPool) return _adminPool;
 
   const connectionString = (process.env.DATABASE_URL || '').trim();
-  if (!connectionString) throw new Error('DATABASE_URL is not configured');
+  if (!connectionString) throw new Error('DATABASE_URL is not configured in environment variables');
 
   const moduleName = 'pg';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,7 +32,7 @@ async function getAdminPool(): Promise<any> {
     ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
     max: 5,
     idleTimeoutMillis: 20000,
-    connectionTimeoutMillis: 3000,
+    connectionTimeoutMillis: 10000,
   });
 
   return _adminPool;
@@ -433,14 +433,19 @@ export async function exportDownloadsCsv(
 // ─── Admin Sessions ───────────────────────────────────────────────────────────
 
 export async function createAdminSession(sessionId: string, ttlHours = 8): Promise<void> {
-  await initAdminSchema();
-  const pool = await getAdminPool();
+  try {
+    await initAdminSchema();
+    const pool = await getAdminPool();
 
-  await pool.query(
-    `INSERT INTO tempelink_admin_sessions (id, expires_at)
-     VALUES ($1, NOW() + INTERVAL '${ttlHours} hours')`,
-    [sessionId]
-  );
+    await pool.query(
+      `INSERT INTO tempelink_admin_sessions (id, expires_at)
+       VALUES ($1, NOW() + INTERVAL '${ttlHours} hours')
+       ON CONFLICT (id) DO UPDATE SET expires_at = EXCLUDED.expires_at`,
+      [sessionId]
+    );
+  } catch (err) {
+    console.warn('[Admin DB] Failed to record admin session to DB:', err instanceof Error ? err.message : String(err));
+  }
 }
 
 export async function validateAdminSession(sessionId: string): Promise<boolean> {
