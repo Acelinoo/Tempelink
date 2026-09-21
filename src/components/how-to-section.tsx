@@ -19,10 +19,10 @@ export const HowToSection: React.FC = () => {
         {t('howToTitle')}
       </h2>
 
-      <div className="relative flex flex-col sm:flex-row items-start sm:items-start justify-center gap-8 sm:gap-0">
+      <div className="relative grid grid-cols-3 gap-2 sm:gap-6 items-start justify-center">
         {/* Connecting line (desktop) */}
         <div
-          className="hidden sm:block absolute top-10 left-1/2 -translate-x-1/2 h-px bg-app-surface border-t border-app"
+          className="hidden sm:block absolute top-8 left-1/2 -translate-x-1/2 h-px bg-app-surface border-t border-app"
           style={{ width: 'calc(66.6% - 40px)' }}
           aria-hidden="true"
         />
@@ -32,22 +32,22 @@ export const HowToSection: React.FC = () => {
           return (
             <div
               key={idx}
-              className="relative flex flex-col items-center text-center flex-1 max-w-xs mx-auto sm:mx-0 px-4"
+              className="relative flex flex-col items-center text-center px-1 sm:px-4"
             >
               {/* Step number badge */}
-              <div className="relative mb-4">
-                <div className="w-20 h-20 rounded-full bg-app-surface border-2 border-app flex items-center justify-center shadow-sm">
-                  <Icon className="w-8 h-8 text-app-cta" />
+              <div className="relative mb-2.5 sm:mb-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-app-surface border-2 border-app flex items-center justify-center shadow-sm">
+                  <Icon className="w-5 h-5 sm:w-7 sm:h-7 text-app-cta" />
                 </div>
-                <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-app-cta text-[var(--accent-cta-text)] text-xs font-black flex items-center justify-center shadow-sm">
+                <span className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-app-cta text-[var(--accent-cta-text)] text-[10px] sm:text-xs font-black flex items-center justify-center shadow-sm">
                   {idx + 1}
                 </span>
               </div>
 
-              <h3 className="text-sm font-bold text-app-main mb-1.5">
+              <h3 className="text-xs sm:text-sm font-bold text-app-main mb-1 leading-snug">
                 {t(step.titleKey)}
               </h3>
-              <p className="text-xs text-app-muted leading-relaxed">
+              <p className="text-[10px] sm:text-xs text-app-muted leading-tight sm:leading-relaxed">
                 {t(step.descKey)}
               </p>
             </div>

@@ -22,19 +22,19 @@ export const FeaturesSection: React.FC = () => {
         {t('featuresTitle')}
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4">
         {FEATURES.map((feat, idx) => {
           const Icon = feat.icon;
           return (
             <div
               key={idx}
-              className="p-5 rounded-xl bg-app-surface border border-app hover:border-[var(--border-focus)] transition-colors duration-200 flex flex-col space-y-2"
+              className="p-3.5 sm:p-5 rounded-xl bg-app-surface border border-app hover:border-[var(--border-focus)] transition-colors duration-200 flex flex-col space-y-1.5 sm:space-y-2 shadow-sm"
             >
-              <div className="w-9 h-9 rounded-lg bg-app-elevated border border-app flex items-center justify-center">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-app-elevated border border-app flex items-center justify-center flex-shrink-0">
                 <Icon className="w-4 h-4 text-app-cta" />
               </div>
-              <h3 className="text-sm font-bold text-app-main">{t(feat.titleKey)}</h3>
-              <p className="text-xs text-app-muted leading-relaxed">{t(feat.descKey)}</p>
+              <h3 className="text-xs sm:text-sm font-bold text-app-main leading-snug">{t(feat.titleKey)}</h3>
+              <p className="text-[11px] sm:text-xs text-app-muted leading-relaxed">{t(feat.descKey)}</p>
             </div>
           );
         })}

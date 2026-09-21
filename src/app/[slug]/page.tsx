@@ -189,32 +189,32 @@ export default async function PlatformLandingPage({ params }: PageProps) {
               Verifikasi Otomatis
             </span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
             {config.supportedFormats.map((fmt, idx) => (
-              <div key={idx} className="p-4 rounded-xl bg-app-surface border border-app space-y-2 hover:border-[var(--border-focus)] transition-colors">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-app-main">{fmt.label}</span>
-                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-app-elevated text-app-cta border border-app font-bold">{fmt.quality}</span>
+              <div key={idx} className="p-3 sm:p-4 rounded-xl bg-app-surface border border-app space-y-1.5 sm:space-y-2 hover:border-[var(--border-focus)] transition-colors shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <span className="text-xs sm:text-sm font-bold text-app-main leading-tight">{fmt.label}</span>
+                  <span className="self-start sm:self-auto text-[9px] sm:text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-app-elevated text-app-cta border border-app font-bold">{fmt.quality}</span>
                 </div>
-                <p className="text-xs text-app-muted leading-relaxed">{fmt.description}</p>
+                <p className="text-[11px] sm:text-xs text-app-muted leading-relaxed">{fmt.description}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* How To Steps */}
-        <section id="cara-mengunduh" className="space-y-5">
+        <section id="cara-mengunduh" className="space-y-4 sm:space-y-5">
           <h2 className="text-lg sm:text-2xl font-bold text-app-main tracking-tight">
             Cara Mengunduh Media {config.name}
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
             {config.howToSteps.map((step) => (
-              <div key={step.step} className="p-5 rounded-xl bg-app-surface border border-app flex flex-col space-y-2.5">
-                <div className="w-7 h-7 rounded-lg bg-app-elevated border border-app text-app-cta flex items-center justify-center text-xs font-black">
+              <div key={step.step} className="p-2.5 sm:p-5 rounded-xl bg-app-surface border border-app flex flex-col space-y-1.5 sm:space-y-2.5 shadow-sm text-center items-center">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-app-elevated border border-app text-app-cta flex items-center justify-center text-[10px] sm:text-xs font-black">
                   {step.step}
                 </div>
-                <h3 className="text-xs sm:text-sm font-bold text-app-main">{step.title}</h3>
-                <p className="text-xs text-app-muted leading-relaxed">{step.description}</p>
+                <h3 className="text-[11px] sm:text-sm font-bold text-app-main leading-snug">{step.title}</h3>
+                <p className="text-[10px] sm:text-xs text-app-muted leading-tight sm:leading-relaxed">{step.description}</p>
               </div>
             ))}
           </div>

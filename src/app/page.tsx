@@ -380,35 +380,41 @@ export default function HomePage() {
         <FeaturesSection />
 
         {/* Value Proposition & Integrity Pillars */}
-        <div className="w-full border-t border-app pt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
-          <div className="p-4 rounded-xl bg-app-surface border border-app flex flex-col space-y-2 shadow-sm">
-            <div className="w-8 h-8 rounded-lg bg-app-elevated border border-app text-app-cta flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4" />
+        <div className="w-full border-t border-app pt-10 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 text-left">
+          <div className="p-3 sm:p-4 rounded-xl bg-app-surface border border-app flex items-start sm:flex-col gap-3 sm:gap-0 sm:space-y-2 shadow-sm">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-app-elevated border border-app text-app-cta flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0">
+              <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
-            <h3 className="text-sm font-bold text-app-main">{t('pillarHonestyTitle')}</h3>
-            <p className="text-xs text-app-muted leading-relaxed">
-              {t('pillarHonestyDesc')}
-            </p>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-xs sm:text-sm font-bold text-app-main leading-snug">{t('pillarHonestyTitle')}</h3>
+              <p className="text-[11px] sm:text-xs text-app-muted leading-relaxed mt-0.5 sm:mt-1">
+                {t('pillarHonestyDesc')}
+              </p>
+            </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-app-surface border border-app flex flex-col space-y-2 shadow-sm">
-            <div className="w-8 h-8 rounded-lg bg-app-elevated border border-app text-app-cta flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4" />
+          <div className="p-3 sm:p-4 rounded-xl bg-app-surface border border-app flex items-start sm:flex-col gap-3 sm:gap-0 sm:space-y-2 shadow-sm">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-app-elevated border border-app text-app-cta flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0">
+              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
-            <h3 className="text-sm font-bold text-app-main">{t('pillarSafetyTitle')}</h3>
-            <p className="text-xs text-app-muted leading-relaxed">
-              {t('pillarSafetyDesc')}
-            </p>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-xs sm:text-sm font-bold text-app-main leading-snug">{t('pillarSafetyTitle')}</h3>
+              <p className="text-[11px] sm:text-xs text-app-muted leading-relaxed mt-0.5 sm:mt-1">
+                {t('pillarSafetyDesc')}
+              </p>
+            </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-app-surface border border-app flex flex-col space-y-2 shadow-sm">
-            <div className="w-8 h-8 rounded-lg bg-app-elevated border border-app text-app-cta flex items-center justify-center">
-              <EyeOff className="w-4 h-4" />
+          <div className="p-3 sm:p-4 rounded-xl bg-app-surface border border-app flex items-start sm:flex-col gap-3 sm:gap-0 sm:space-y-2 shadow-sm">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-app-elevated border border-app text-app-cta flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0">
+              <EyeOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
-            <h3 className="text-sm font-bold text-app-main">{t('pillarPrivacyTitle')}</h3>
-            <p className="text-xs text-app-muted leading-relaxed">
-              {t('pillarPrivacyDesc')}
-            </p>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-xs sm:text-sm font-bold text-app-main leading-snug">{t('pillarPrivacyTitle')}</h3>
+              <p className="text-[11px] sm:text-xs text-app-muted leading-relaxed mt-0.5 sm:mt-1">
+                {t('pillarPrivacyDesc')}
+              </p>
+            </div>
           </div>
         </div>
 

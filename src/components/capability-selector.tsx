@@ -79,7 +79,7 @@ export const CapabilitySelector: React.FC<CapabilitySelectorProps> = ({
               }`}
             >
               {/* Left Details */}
-              <div className="flex items-center space-x-3 min-w-0 pr-2">
+              <div className="flex items-center space-x-3 min-w-0 pr-2 flex-1">
                 <div
                   className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 border border-app bg-app-elevated ${
                     isHD ? 'text-app-cta' : 'text-app-main'
@@ -88,19 +88,19 @@ export const CapabilitySelector: React.FC<CapabilitySelectorProps> = ({
                   <Icon className="w-4 h-4" />
                 </div>
 
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center space-x-1.5">
-                    <span className="font-bold text-sm text-app-main truncate">
+                <div className="flex flex-col min-w-0 flex-1">
+                  <div className="flex items-center flex-wrap gap-1">
+                    <span className="font-bold text-xs sm:text-sm text-app-main leading-snug break-words">
                       {cap.label}
                     </span>
                     {isHD && (
-                      <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-app-cta text-[var(--accent-cta-text)]">
+                      <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-app-cta text-[var(--accent-cta-text)] flex-shrink-0">
                         HD
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center space-x-2 text-xs text-app-subtle mt-0.5">
+                  <div className="flex items-center space-x-2 text-[11px] sm:text-xs text-app-subtle mt-0.5">
                     <span className="uppercase font-mono font-medium">{cap.format}</span>
                     {cap.resolution && (
                       <>
@@ -124,7 +124,7 @@ export const CapabilitySelector: React.FC<CapabilitySelectorProps> = ({
                 onClick={() => onSelectCapability(cap)}
                 disabled={isDownloadingAny}
                 aria-label={`${t('btnDownload')} ${cap.label}`}
-                className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm cursor-pointer ${
+                className={`flex-shrink-0 flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm cursor-pointer ${
                   isCurrentSuccess
                     ? 'bg-emerald-600 text-white'
                     : isCurrentError
