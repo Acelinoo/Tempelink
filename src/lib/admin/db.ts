@@ -10,22 +10,16 @@
  *   tempelink_admin_access_logs  — audit log (login/logout events)
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _adminPool: any = null;
+import { Pool } from 'pg';
+
+let _adminPool: Pool | null = null;
 let _schemaInitialized = false;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getAdminPool(): Promise<any> {
+async function getAdminPool(): Promise<Pool> {
   if (_adminPool) return _adminPool;
 
   const connectionString = (process.env.DATABASE_URL || '').trim();
   if (!connectionString) throw new Error('DATABASE_URL is not configured in environment variables');
-
-  const moduleName = 'pg';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pg: any = await import(/* webpackIgnore: true */ moduleName);
-  const Pool = pg.Pool || pg.default?.Pool;
-  if (!Pool) throw new Error('pg Pool not found');
 
   _adminPool = new Pool({
     connectionString,

@@ -1,3 +1,4 @@
+import { Pool } from 'pg';
 import { Batch, QueueJob } from '../types/queue';
 import { BatchStore } from './store';
 import { TempelinkError } from '../types/errors';
@@ -11,24 +12,16 @@ import { Logger } from '../telemetry/logger';
 export class PostgresBatchStore implements BatchStore {
   public readonly driver = 'postgres' as const;
   private connectionString: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private pool: any = null;
+  private pool: Pool | null = null;
   private isInitialized = false;
 
   constructor(connectionString: string) {
     this.connectionString = connectionString;
   }
 
-  private async getPool() {
+  private async getPool(): Promise<Pool> {
     if (this.pool) return this.pool;
     try {
-      const moduleName = 'pg';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const pg: any = await import(/* webpackIgnore: true */ moduleName);
-      const Pool = pg.Pool || pg.default?.Pool;
-      if (!Pool) {
-        throw new Error('PostgreSQL Pool constructor not found');
-      }
       this.pool = new Pool({
         connectionString: this.connectionString,
         ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },

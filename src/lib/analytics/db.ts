@@ -6,16 +6,16 @@
  * Privacy-first: stores only platform + timestamp. No URLs, IPs, or tokens.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _pool: any = null;
+import { Pool } from 'pg';
+
+let _pool: Pool | null = null;
 let _initialized = false;
 
 function hasDatabase(): boolean {
   return !!(process.env.DATABASE_URL || '').trim();
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getPool(): Promise<any> {
+async function getPool(): Promise<Pool> {
   if (_pool) return _pool;
 
   const connectionString = (process.env.DATABASE_URL || '').trim();
@@ -24,18 +24,12 @@ async function getPool(): Promise<any> {
   }
 
   try {
-    const moduleName = 'pg';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pg: any = await import(/* webpackIgnore: true */ moduleName);
-    const Pool = pg.Pool || pg.default?.Pool;
-    if (!Pool) throw new Error('PostgreSQL Pool constructor not found');
-
     _pool = new Pool({
       connectionString,
       ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
       max: 5,
       idleTimeoutMillis: 20000,
-      connectionTimeoutMillis: 2000, // fail fast: 2s instead of 10s
+      connectionTimeoutMillis: 5000,
     });
 
     return _pool;
