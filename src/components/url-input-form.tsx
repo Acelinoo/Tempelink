@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Clipboard, X, ArrowRight, Loader2, Link2, Sparkles } from 'lucide-react';
+import { Clipboard, X, ArrowRight, Loader2, Link2, CheckCircle2 } from 'lucide-react';
+import { useApp } from '@/lib/context/app-context';
 
 interface UrlInputFormProps {
   url: string;
@@ -16,6 +17,7 @@ export const UrlInputForm: React.FC<UrlInputFormProps> = ({
   onSubmit,
   isLoading,
 }) => {
+  const { t } = useApp();
   const [pasteNotice, setPasteNotice] = useState<string | null>(null);
   const [detectedClipboardUrl, setDetectedClipboardUrl] = useState<string | null>(null);
 
@@ -39,7 +41,7 @@ export const UrlInputForm: React.FC<UrlInputFormProps> = ({
   const handleInspectClipboard = async () => {
     try {
       if (!navigator.clipboard) {
-        setPasteNotice('Izin clipboard tidak tersedia pada browser ini.');
+        setPasteNotice(t('clipboardPermissionDenied'));
         setTimeout(() => setPasteNotice(null), 3000);
         return;
       }
@@ -48,24 +50,23 @@ export const UrlInputForm: React.FC<UrlInputFormProps> = ({
       const trimmed = text.trim();
 
       if (!trimmed) {
-        setPasteNotice('Clipboard kosong.');
+        setPasteNotice(t('clipboardEmpty'));
         setTimeout(() => setPasteNotice(null), 2500);
         return;
       }
 
       if (isSupportedUrlPattern(trimmed)) {
         if (url === trimmed) {
-          setPasteNotice('Link sudah terisi di form.');
+          setPasteNotice(t('clipboardAlreadyFilled'));
           setTimeout(() => setPasteNotice(null), 2500);
           return;
         }
         setDetectedClipboardUrl(trimmed);
       } else {
-        // If not recognized as supported platform, paste directly
         onChangeUrl(trimmed);
       }
     } catch {
-      setPasteNotice('Gagal membaca clipboard. Silakan gunakan paste manual (Ctrl+V).');
+      setPasteNotice(t('clipboardReadFailed'));
       setTimeout(() => setPasteNotice(null), 3500);
     }
   };
@@ -84,14 +85,14 @@ export const UrlInputForm: React.FC<UrlInputFormProps> = ({
 
   return (
     <form onSubmit={onSubmit} className="w-full max-w-2xl mx-auto flex flex-col items-center">
-      {/* Detected Clipboard Banner (User-Initiated) */}
+      {/* Detected Clipboard Banner */}
       {detectedClipboardUrl && (
-        <div className="w-full mb-3 p-3 rounded-xl bg-cyan-950/40 border border-cyan-800/60 text-cyan-200 flex items-center justify-between gap-3 text-xs animate-fade-in shadow-md shadow-cyan-950/20">
+        <div className="w-full mb-3 p-3 rounded-xl border border-app bg-app-surface text-app-main flex items-center justify-between gap-3 text-xs animate-fade-in shadow-md">
           <div className="flex items-center space-x-2 min-w-0">
-            <Sparkles className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-app-cta flex-shrink-0" />
             <div className="min-w-0">
-              <span className="font-semibold text-white">Link dari clipboard terdeteksi: </span>
-              <span className="font-mono text-cyan-300 truncate inline-block max-w-[220px] sm:max-w-xs align-bottom">
+              <span className="font-semibold text-app-main">{t('clipboardDetected')} </span>
+              <span className="font-mono text-app-muted truncate inline-block max-w-[200px] sm:max-w-xs align-bottom">
                 {detectedClipboardUrl}
               </span>
             </div>
@@ -100,15 +101,15 @@ export const UrlInputForm: React.FC<UrlInputFormProps> = ({
             <button
               type="button"
               onClick={handleApplyClipboardUrl}
-              className="px-2.5 py-1 rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold transition-colors"
+              className="px-2.5 py-1 rounded bg-app-cta text-[var(--accent-cta-text)] font-bold transition-opacity hover:opacity-90 cursor-pointer"
             >
-              Gunakan Link
+              {t('clipboardUse')}
             </button>
             <button
               type="button"
               onClick={() => setDetectedClipboardUrl(null)}
-              className="p-1 text-slate-400 hover:text-white rounded transition-colors"
-              title="Abaikan"
+              className="p-1 text-app-subtle hover:text-app-main rounded transition-colors cursor-pointer"
+              title={t('clipboardDismiss')}
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -118,8 +119,8 @@ export const UrlInputForm: React.FC<UrlInputFormProps> = ({
 
       {/* Main Input Box */}
       <div className="w-full relative group">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
-          <Link2 className="w-5 h-5 text-slate-400 group-focus-within:text-cyan-400 transition-colors" />
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-app-subtle">
+          <Link2 className="w-5 h-5 text-app-subtle group-focus-within:text-app-cta transition-colors" />
         </div>
 
         <input
@@ -129,11 +130,11 @@ export const UrlInputForm: React.FC<UrlInputFormProps> = ({
             onChangeUrl(e.target.value);
             if (detectedClipboardUrl) setDetectedClipboardUrl(null);
           }}
-          placeholder="Tempel link TikTok, Instagram, YouTube, X, Facebook, atau Pinterest..."
+          placeholder={t('inputPlaceholder')}
           disabled={isLoading}
           required
           autoFocus
-          className="w-full pl-11 pr-28 sm:pr-36 py-4 bg-slate-900/90 border border-slate-700/80 hover:border-slate-600 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 rounded-xl text-white placeholder-slate-500 text-sm sm:text-base outline-none transition-all shadow-lg shadow-black/20"
+          className="w-full pl-11 pr-28 sm:pr-36 py-4 bg-[var(--input-bg)] border border-app hover:border-[var(--border-focus)] focus:border-app-cta focus:ring-2 focus:ring-app-cta/20 rounded-xl text-app-main placeholder:text-app-subtle text-sm sm:text-base outline-none transition-all shadow-md"
         />
 
         <div className="absolute inset-y-0 right-1.5 flex items-center space-x-1.5">
@@ -142,8 +143,8 @@ export const UrlInputForm: React.FC<UrlInputFormProps> = ({
               type="button"
               onClick={handleClear}
               disabled={isLoading}
-              title="Hapus Link"
-              className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
+              title={t('btnClear')}
+              className="p-2 text-app-subtle hover:text-app-main hover:bg-app-elevated rounded-lg transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -152,27 +153,27 @@ export const UrlInputForm: React.FC<UrlInputFormProps> = ({
               type="button"
               onClick={handleInspectClipboard}
               disabled={isLoading}
-              title="Periksa Clipboard"
-              className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 hover:text-white rounded-lg transition-colors border border-slate-700/50"
+              title={t('btnPaste')}
+              className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-medium text-app-main bg-app-elevated hover:opacity-90 rounded-lg transition-colors border border-app cursor-pointer"
             >
-              <Clipboard className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Tempel</span>
+              <Clipboard className="w-3.5 h-3.5 text-app-cta" />
+              <span>{t('btnPaste')}</span>
             </button>
           )}
 
           <button
             type="submit"
             disabled={isLoading || !url.trim()}
-            className="flex items-center space-x-1 px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 transition-all shadow-md shadow-cyan-500/20"
+            className="flex items-center space-x-1 px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-app-cta text-[var(--accent-cta-text)] hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md cursor-pointer"
           >
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="hidden sm:inline">Memeriksa...</span>
+                <span className="hidden sm:inline">{t('btnInspecting')}</span>
               </>
             ) : (
               <>
-                <span>Unduh</span>
+                <span>{t('btnInspect')}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -181,7 +182,7 @@ export const UrlInputForm: React.FC<UrlInputFormProps> = ({
       </div>
 
       {pasteNotice && (
-        <p className="mt-2 text-xs text-amber-400/90 animate-fade-in font-medium">
+        <p className="mt-2 text-xs text-app-cta animate-fade-in font-medium">
           {pasteNotice}
         </p>
       )}

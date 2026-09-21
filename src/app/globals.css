@@ -1,39 +1,71 @@
 @import "tailwindcss";
 
-:root {
-  --bg-primary: #090d16;
-  --bg-secondary: #0f172a;
-  --bg-surface: #1e293b;
-  --bg-surface-hover: #334155;
-  --border-subtle: #334155;
-  --border-focus: #38bdf8;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --accent-blue: #0284c7;
-  --accent-cyan: #06b6d4;
-  --accent-emerald: #10b981;
-  --accent-rose: #f43f5e;
+/* 
+ * Tempelink Strict Palette System
+ * Light: #F7FBFC (BG), #D6E6F2 (Surface), #B9D7EA (Border), #769FCD (Accent CTA)
+ * Dark:  #000000 (BG), #233D4D (Surface), #FE7F2D (Accent CTA), #EAECF0 (Text Light)
+ * ZERO NEON, ZERO PURPLE.
+ */
+
+:root, html.light {
+  --bg-main: #F7FBFC;
+  --bg-surface: #D6E6F2;
+  --bg-surface-elevated: #E8F1F8;
+  --bg-surface-subtle: #EDF4FA;
+  --border-subtle: #B9D7EA;
+  --border-focus: #769FCD;
+  --accent-cta: #769FCD;
+  --accent-cta-hover: #5F8BBB;
+  --accent-cta-text: #FFFFFF;
+  --text-main: #0F172A;
+  --text-muted: #334155;
+  --text-subtle: #64748B;
+  --badge-bg: #E2EDF7;
+  --badge-border: #B9D7EA;
+  --badge-text: #2A5480;
+  --input-bg: #FFFFFF;
+  --card-shadow: 0 4px 16px -2px rgba(118, 159, 205, 0.12);
+}
+
+html.dark {
+  --bg-main: #000000;
+  --bg-surface: #233D4D;
+  --bg-surface-elevated: #2D4C5E;
+  --bg-surface-subtle: #182C38;
+  --border-subtle: #315166;
+  --border-focus: #FE7F2D;
+  --accent-cta: #FE7F2D;
+  --accent-cta-hover: #E66F22;
+  --accent-cta-text: #000000;
+  --text-main: #EAECF0;
+  --text-muted: #CBD5E1;
+  --text-subtle: #94A3B8;
+  --badge-bg: #182C38;
+  --badge-border: #315166;
+  --badge-text: #FE7F2D;
+  --input-bg: #182C38;
+  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.7);
 }
 
 body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  background-color: var(--bg-main);
+  color: var(--text-main);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   min-height: 100vh;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* Custom scrollbar */
+/* Custom modern scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: var(--bg-main);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -42,5 +74,51 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--text-subtle);
+}
+
+/* Base utility tokens */
+.bg-app-main {
+  background-color: var(--bg-main);
+}
+
+.bg-app-surface {
+  background-color: var(--bg-surface);
+}
+
+.bg-app-elevated {
+  background-color: var(--bg-surface-elevated);
+}
+
+.border-app {
+  border-color: var(--border-subtle);
+}
+
+.text-app-main {
+  color: var(--text-main);
+}
+
+.text-app-muted {
+  color: var(--text-muted);
+}
+
+.text-app-subtle {
+  color: var(--text-subtle);
+}
+
+.bg-app-cta {
+  background-color: var(--accent-cta);
+  color: var(--accent-cta-text);
+}
+
+.bg-app-cta:hover {
+  background-color: var(--accent-cta-hover);
+}
+
+.text-app-cta {
+  color: var(--accent-cta);
+}
+
+.border-app-cta {
+  border-color: var(--accent-cta);
 }

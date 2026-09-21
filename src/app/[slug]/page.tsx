@@ -55,9 +55,9 @@ const PLATFORM_COLORS: Record<string, { badge: string; text: string; bg: string 
     bg: 'from-pink-500/10 to-transparent',
   },
   instagram: {
-    badge: 'text-purple-400 bg-purple-950/40 border-purple-800/40',
-    text: 'text-purple-400',
-    bg: 'from-purple-500/10 to-transparent',
+    badge: 'text-amber-500 bg-amber-950/40 border-amber-800/40',
+    text: 'text-amber-500',
+    bg: 'from-amber-500/10 to-transparent',
   },
   youtube: {
     badge: 'text-red-400 bg-red-950/40 border-red-800/40',
@@ -141,9 +141,9 @@ export default async function PlatformLandingPage({ params }: PageProps) {
   const canonicalUrl = `${baseUrl}/${config.slug}`;
   const Icon = PLATFORM_ICONS[config.platformId] || Video;
   const colorTheme = PLATFORM_COLORS[config.platformId] || {
-    badge: 'text-cyan-400 bg-cyan-950/40 border-cyan-800/40',
-    text: 'text-cyan-400',
-    bg: 'from-cyan-500/10 to-transparent',
+    badge: 'text-app-cta bg-app-elevated border-app',
+    text: 'text-app-cta',
+    bg: 'from-app-cta/10 to-transparent',
   };
 
   // Other platforms for cross-linking
@@ -152,7 +152,7 @@ export default async function PlatformLandingPage({ params }: PageProps) {
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#090d16] text-slate-100">
+    <div className="flex flex-col min-h-screen bg-app-main text-app-main transition-colors duration-200">
       {/* Schema.org Structured Data */}
       <WebAppJsonLd
         url={canonicalUrl}
@@ -162,23 +162,23 @@ export default async function PlatformLandingPage({ params }: PageProps) {
       <FaqJsonLd faqs={config.faqs} />
 
       {/* Top Simple Header */}
-      <header className="w-full border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md sticky top-0 z-40">
+      <header className="w-full border-b border-app bg-app-surface/90 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center space-x-2 text-white hover:opacity-90 transition-opacity"
+            className="flex items-center space-x-2 text-app-main hover:opacity-90 transition-opacity"
           >
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-black text-sm text-white shadow-md shadow-cyan-500/20">
+            <div className="w-7 h-7 rounded-lg bg-app-cta flex items-center justify-center font-black text-sm text-[var(--accent-cta-text)] shadow-sm">
               T
             </div>
-            <span className="font-black tracking-tight text-base sm:text-lg">
+            <span className="font-extrabold tracking-tight text-base sm:text-lg">
               Tempelink
             </span>
           </Link>
 
           <Link
             href="/"
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 text-xs font-semibold transition-all"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-app-cta text-[var(--accent-cta-text)] hover:opacity-90 text-xs font-bold transition-all shadow-sm"
           >
             <span>Buka Pengunduh</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -217,14 +217,14 @@ export default async function PlatformLandingPage({ params }: PageProps) {
             <div className="pt-4 flex flex-wrap items-center gap-3">
               <Link
                 href="/"
-                className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs sm:text-sm font-bold shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-blue-500 transition-all cursor-pointer"
+                className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-app-cta text-[var(--accent-cta-text)] text-xs sm:text-sm font-bold shadow-md hover:opacity-90 transition-all cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Mulai Unduh Sekarang</span>
               </Link>
               <a
                 href="#cara-mengunduh"
-                className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 text-xs sm:text-sm font-medium border border-slate-700/60 transition-colors"
+                className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-app-surface hover:bg-app-elevated text-app-main text-xs sm:text-sm font-medium border border-app transition-colors"
               >
                 <span>Lihat Panduan</span>
               </a>
@@ -234,10 +234,10 @@ export default async function PlatformLandingPage({ params }: PageProps) {
 
         {/* About & Overview Section */}
         <section className="space-y-4">
-          <h2 className="text-lg sm:text-2xl font-bold text-white tracking-tight">
+          <h2 className="text-lg sm:text-2xl font-bold text-app-main tracking-tight">
             Tentang Pengunduh {config.name} Tempelink
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+          <p className="text-xs sm:text-sm text-app-muted leading-relaxed">
             {config.aboutText}
           </p>
         </section>
@@ -245,10 +245,10 @@ export default async function PlatformLandingPage({ params }: PageProps) {
         {/* Supported Formats Grid */}
         <section className="space-y-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg sm:text-2xl font-bold text-white tracking-tight">
+            <h2 className="text-lg sm:text-2xl font-bold text-app-main tracking-tight">
               Format & Resolusi yang Didukung
             </h2>
-            <span className="text-[11px] font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/50">
+            <span className="text-[11px] font-mono text-app-cta bg-app-elevated px-2 py-0.5 rounded border border-app font-bold">
               Verifikasi Otomatis
             </span>
           </div>
@@ -257,17 +257,17 @@ export default async function PlatformLandingPage({ params }: PageProps) {
             {config.supportedFormats.map((fmt, idx) => (
               <div
                 key={idx}
-                className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80 space-y-2 hover:border-slate-700 transition-colors"
+                className="p-4 rounded-xl bg-app-surface border border-app space-y-2 hover:border-app-cta transition-colors"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white">
+                  <span className="text-xs font-bold text-app-main">
                     {fmt.label}
                   </span>
-                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">
+                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-app-elevated text-app-cta border border-app font-bold">
                     {fmt.quality}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <p className="text-xs text-app-muted leading-relaxed">
                   {fmt.description}
                 </p>
               </div>
@@ -277,7 +277,7 @@ export default async function PlatformLandingPage({ params }: PageProps) {
 
         {/* How To Steps */}
         <section id="cara-mengunduh" className="space-y-5">
-          <h2 className="text-lg sm:text-2xl font-bold text-white tracking-tight">
+          <h2 className="text-lg sm:text-2xl font-bold text-app-main tracking-tight">
             Cara Mengunduh Media {config.name}
           </h2>
 
@@ -285,15 +285,15 @@ export default async function PlatformLandingPage({ params }: PageProps) {
             {config.howToSteps.map((step) => (
               <div
                 key={step.step}
-                className="p-5 rounded-xl bg-slate-900/40 border border-slate-800/80 flex flex-col space-y-2.5 relative"
+                className="p-5 rounded-xl bg-app-surface border border-app flex flex-col space-y-2.5 relative"
               >
-                <div className="w-7 h-7 rounded-lg bg-cyan-950/70 border border-cyan-800/40 text-cyan-400 flex items-center justify-center text-xs font-black">
+                <div className="w-7 h-7 rounded-lg bg-app-elevated border border-app text-app-cta flex items-center justify-center text-xs font-black">
                   {step.step}
                 </div>
-                <h3 className="text-xs sm:text-sm font-bold text-white">
+                <h3 className="text-xs sm:text-sm font-bold text-app-main">
                   {step.title}
                 </h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <p className="text-xs text-app-muted leading-relaxed">
                   {step.description}
                 </p>
               </div>
@@ -303,17 +303,17 @@ export default async function PlatformLandingPage({ params }: PageProps) {
 
         {/* Supported Link Syntax */}
         <section className="space-y-4">
-          <h2 className="text-lg sm:text-2xl font-bold text-white tracking-tight">
+          <h2 className="text-lg sm:text-2xl font-bold text-app-main tracking-tight">
             Format Tautan yang Didukung
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400">
+          <p className="text-xs sm:text-sm text-app-muted">
             Tempelink secara cerdas mengenali format tautan web, aplikasi seluler, dan tautan pendek resmi:
           </p>
 
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 font-mono text-[11px] sm:text-xs text-slate-300 space-y-2 overflow-x-auto">
+          <div className="p-4 rounded-xl bg-app-surface border border-app font-mono text-[11px] sm:text-xs text-app-main space-y-2 overflow-x-auto">
             {config.supportedUrlExamples.map((ex, i) => (
-              <div key={i} className="flex items-center space-x-2 text-cyan-300/90">
-                <span className="text-slate-600 select-none">#</span>
+              <div key={i} className="flex items-center space-x-2 text-app-cta">
+                <span className="text-app-subtle select-none">#</span>
                 <span className="break-all">{ex}</span>
               </div>
             ))}
@@ -321,14 +321,14 @@ export default async function PlatformLandingPage({ params }: PageProps) {
         </section>
 
         {/* Honest Limitations & Privacy */}
-        <section className="p-5 rounded-xl bg-slate-900/40 border border-slate-800 space-y-3">
-          <div className="flex items-center space-x-2 text-slate-300">
-            <Info className="w-4 h-4 text-cyan-400 shrink-0" />
-            <h2 className="text-xs sm:text-sm font-bold text-white">
+        <section className="p-5 rounded-xl bg-app-surface border border-app space-y-3">
+          <div className="flex items-center space-x-2 text-app-main">
+            <Info className="w-4 h-4 text-app-cta shrink-0" />
+            <h2 className="text-xs sm:text-sm font-bold text-app-main">
               Batasan Teknis & Transparansi Layanan
             </h2>
           </div>
-          <ul className="space-y-2 text-xs text-slate-400 list-disc list-inside">
+          <ul className="space-y-2 text-xs text-app-muted list-disc list-inside">
             {config.limitations.map((lim, idx) => (
               <li key={idx} className="leading-relaxed">
                 {lim}
@@ -340,8 +340,8 @@ export default async function PlatformLandingPage({ params }: PageProps) {
         {/* Frequently Asked Questions (FAQ) */}
         <section className="space-y-5">
           <div className="flex items-center space-x-2">
-            <HelpCircle className="w-5 h-5 text-cyan-400" />
-            <h2 className="text-lg sm:text-2xl font-bold text-white tracking-tight">
+            <HelpCircle className="w-5 h-5 text-app-cta" />
+            <h2 className="text-lg sm:text-2xl font-bold text-app-main tracking-tight">
               Pertanyaan yang Sering Diajukan (FAQ)
             </h2>
           </div>
@@ -350,12 +350,12 @@ export default async function PlatformLandingPage({ params }: PageProps) {
             {config.faqs.map((faq, idx) => (
               <div
                 key={idx}
-                className="p-5 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2"
+                className="p-5 rounded-xl bg-app-surface border border-app space-y-2"
               >
-                <h3 className="text-xs sm:text-sm font-bold text-white">
+                <h3 className="text-xs sm:text-sm font-bold text-app-main">
                   {faq.question}
                 </h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <p className="text-xs text-app-muted leading-relaxed">
                   {faq.answer}
                 </p>
               </div>
@@ -364,10 +364,10 @@ export default async function PlatformLandingPage({ params }: PageProps) {
         </section>
 
         {/* Cross-linking to Other Platforms */}
-        <section className="border-t border-slate-800/80 pt-10 space-y-5">
+        <section className="border-t border-app pt-10 space-y-5">
           <div className="flex items-center space-x-2">
-            <Layers className="w-4 h-4 text-cyan-400" />
-            <h2 className="text-base sm:text-xl font-bold text-white tracking-tight">
+            <Layers className="w-4 h-4 text-app-cta" />
+            <h2 className="text-base sm:text-xl font-bold text-app-main tracking-tight">
               Pengunduh Platform Lainnya
             </h2>
           </div>
@@ -379,10 +379,10 @@ export default async function PlatformLandingPage({ params }: PageProps) {
                 <Link
                   key={op.slug}
                   href={`/${op.slug}`}
-                  className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/60 transition-all flex flex-col items-center justify-center text-center space-y-2 group"
+                  className="p-3 rounded-xl bg-app-surface border border-app hover:border-app-cta hover:bg-app-elevated transition-all flex flex-col items-center justify-center text-center space-y-2 group"
                 >
-                  <OpIcon className="w-4 h-4 text-slate-400 group-hover:text-cyan-400 transition-colors" />
-                  <span className="text-xs font-semibold text-slate-300 group-hover:text-white transition-colors">
+                  <OpIcon className="w-4 h-4 text-app-subtle group-hover:text-app-cta transition-colors" />
+                  <span className="text-xs font-semibold text-app-muted group-hover:text-app-main transition-colors">
                     {op.name}
                   </span>
                 </Link>
@@ -393,15 +393,15 @@ export default async function PlatformLandingPage({ params }: PageProps) {
       </main>
 
       {/* Footer */}
-      <footer className="w-full border-t border-slate-800/80 py-6 text-center text-xs text-slate-500 mt-12">
+      <footer className="w-full border-t border-app py-6 text-center text-xs text-app-subtle mt-12 bg-app-surface/50">
         <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>&copy; 2026 Tempelink. Seluruh hak cipta dilindungi.</span>
-          <div className="flex items-center space-x-3 text-[11px] text-slate-400">
-            <Link href="/" className="hover:text-cyan-400 transition-colors">
+          <div className="flex items-center space-x-3 text-[11px] text-app-subtle">
+            <Link href="/" className="hover:text-app-cta transition-colors">
               Beranda
             </Link>
             <span>•</span>
-            <span className="font-mono text-cyan-400">
+            <span className="font-mono text-app-cta">
               Phase 8 • SEO & Discoverability
             </span>
           </div>

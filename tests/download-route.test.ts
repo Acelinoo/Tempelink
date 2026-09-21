@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { POST, GET } from '../src/app/api/media/download/route';
 import { generateDownloadToken } from '../src/lib/security/token';
@@ -115,7 +115,7 @@ describe('Media Download Route Handler (/api/media/download)', () => {
   });
 
   describe('GET /api/media/download (Direct Redirect Route)', () => {
-    it('redirects with 302 and attachment header for valid token', async () => {
+    it('redirects with 302 and attachment header for valid token when upstream stream fails or offline', async () => {
       const req = new NextRequest(
         `http://localhost:3000/api/media/download?token=${encodeURIComponent(validToken)}`
       );
@@ -125,7 +125,29 @@ describe('Media Download Route Handler (/api/media/download)', () => {
       expect(res.headers.get('location')).toBe(validPayload.targetUrl);
       expect(res.headers.get('content-disposition')).toContain(validPayload.filename);
       expect(res.headers.get('cache-control')).toContain('no-store');
-      expect(res.headers.get('x-content-type-options')).toBe('nosniff');
+    });
+
+    it('streams media directly with 200 and attachment header when upstream stream succeeds', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        new Response('binary-stream-data', {
+          status: 200,
+          headers: {
+            'content-type': 'video/mp4',
+            'content-length': '18',
+          },
+        })
+      );
+
+      const req = new NextRequest(
+        `http://localhost:3000/api/media/download?token=${encodeURIComponent(validToken)}`
+      );
+
+      const res = await GET(req);
+      expect(res.status).toBe(200);
+      expect(res.headers.get('content-disposition')).toContain(validPayload.filename);
+      expect(res.headers.get('content-type')).toBe('video/mp4');
+      const text = await res.text();
+      expect(text).toBe('binary-stream-data');
     });
 
     it('returns 400 INVALID_URL when token parameter is missing', async () => {

@@ -71,8 +71,10 @@ export const metadata: Metadata = {
   },
 };
 
+import { AppProvider } from "@/lib/context/app-context";
+
 export const viewport: Viewport = {
-  themeColor: "#090d16",
+  themeColor: "#233D4D",
   width: "device-width",
   initialScale: 1,
 };
@@ -85,15 +87,18 @@ export default function RootLayout({
   return (
     <html
       lang="id"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-[#090d16] text-slate-100 selection:bg-cyan-500 selection:text-slate-950 font-sans">
+      <body className="min-h-full flex flex-col bg-app-main text-app-main font-sans transition-colors duration-200">
         <WebSiteJsonLd
           url={baseUrl}
           name="Tempelink"
           description="Universal Media Utility & Downloader"
         />
-        {children}
+        <AppProvider>
+          {children}
+        </AppProvider>
       </body>
     </html>
   );

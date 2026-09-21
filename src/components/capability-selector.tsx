@@ -3,6 +3,7 @@
 import React from 'react';
 import { Capability } from '@/lib/types/capability';
 import { Download, Sparkles, Music, Image as ImageIcon, Video, Loader2, Check, RotateCcw } from 'lucide-react';
+import { useApp } from '@/lib/context/app-context';
 
 export type CapabilityDownloadState = 'idle' | 'downloading' | 'success' | 'error';
 
@@ -19,10 +20,12 @@ export const CapabilitySelector: React.FC<CapabilitySelectorProps> = ({
   selectedCapabilityId,
   downloadState = 'idle',
 }) => {
+  const { t } = useApp();
+
   if (!capabilities || capabilities.length === 0) {
     return (
-      <div className="w-full p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-center text-slate-400 text-sm">
-        Tidak ada opsi unduhan yang dapat diekstrak untuk media ini.
+      <div className="w-full p-4 rounded-xl bg-app-surface border border-app text-center text-app-muted text-sm">
+        {t('noDownloadOptions')}
       </div>
     );
   }
@@ -45,11 +48,11 @@ export const CapabilitySelector: React.FC<CapabilitySelectorProps> = ({
   return (
     <div className="w-full flex flex-col space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs uppercase tracking-wider font-semibold text-slate-400">
-          Opsi Unduhan Tersedia ({capabilities.length})
+        <h4 className="text-xs uppercase tracking-wider font-bold text-app-muted">
+          {t('downloadOptionsTitle')} ({capabilities.length})
         </h4>
-        <span className="text-[11px] text-slate-500 font-mono">
-          Opsi Terverifikasi Langsung dari Sumber
+        <span className="text-[11px] text-app-subtle font-mono">
+          {t('verifiedDirectSource')}
         </span>
       </div>
 
@@ -70,20 +73,16 @@ export const CapabilitySelector: React.FC<CapabilitySelectorProps> = ({
               className={`relative flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200 ${
                 isSelected
                   ? isCurrentError
-                    ? 'bg-rose-950/20 border-rose-800/80 shadow-sm shadow-rose-500/10'
-                    : 'bg-slate-800/90 border-cyan-500 shadow-sm shadow-cyan-500/10'
-                  : 'bg-slate-900/80 border-slate-800 hover:border-slate-700 hover:bg-slate-850'
+                    ? 'bg-rose-950/20 border-rose-700/80 shadow-sm'
+                    : 'bg-app-elevated border-app-cta shadow-md ring-1 ring-app-cta/30'
+                  : 'bg-app-surface border-app hover:border-[var(--border-focus)] hover:bg-app-elevated'
               }`}
             >
               {/* Left Details */}
               <div className="flex items-center space-x-3 min-w-0 pr-2">
                 <div
-                  className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    isHD
-                      ? 'bg-amber-950/40 text-amber-400 border border-amber-800/40'
-                      : cap.type === 'audio'
-                      ? 'bg-purple-950/40 text-purple-400 border border-purple-800/40'
-                      : 'bg-slate-800 text-cyan-400 border border-slate-700'
+                  className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 border border-app bg-app-elevated ${
+                    isHD ? 'text-app-cta' : 'text-app-main'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -91,27 +90,27 @@ export const CapabilitySelector: React.FC<CapabilitySelectorProps> = ({
 
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center space-x-1.5">
-                    <span className="font-semibold text-sm text-white truncate">
+                    <span className="font-bold text-sm text-app-main truncate">
                       {cap.label}
                     </span>
                     {isHD && (
-                      <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-amber-500 text-black">
+                      <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-app-cta text-[var(--accent-cta-text)]">
                         HD
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center space-x-2 text-xs text-slate-400 mt-0.5">
+                  <div className="flex items-center space-x-2 text-xs text-app-subtle mt-0.5">
                     <span className="uppercase font-mono font-medium">{cap.format}</span>
                     {cap.resolution && (
                       <>
-                        <span className="text-slate-600">•</span>
+                        <span>•</span>
                         <span>{cap.resolution}</span>
                       </>
                     )}
                     {sizeStr && (
                       <>
-                        <span className="text-slate-600">•</span>
+                        <span>•</span>
                         <span>{sizeStr}</span>
                       </>
                     )}
@@ -119,41 +118,39 @@ export const CapabilitySelector: React.FC<CapabilitySelectorProps> = ({
                 </div>
               </div>
 
-              {/* Right Action */}
+              {/* Right Action Button */}
               <button
                 type="button"
                 onClick={() => onSelectCapability(cap)}
                 disabled={isDownloadingAny}
-                aria-label={`Unduh ${cap.label}`}
-                className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
+                aria-label={`${t('btnDownload')} ${cap.label}`}
+                className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm cursor-pointer ${
                   isCurrentSuccess
-                    ? 'bg-emerald-500 text-slate-950 shadow-sm shadow-emerald-500/20'
+                    ? 'bg-emerald-600 text-white'
                     : isCurrentError
-                    ? 'bg-rose-500 hover:bg-rose-400 active:bg-rose-600 text-white shadow-sm shadow-rose-500/20'
-                    : isHD
-                    ? 'bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 shadow-sm shadow-amber-500/20'
-                    : 'bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 text-slate-950 shadow-sm shadow-cyan-500/20'
+                    ? 'bg-rose-600 text-white hover:bg-rose-500'
+                    : 'bg-app-cta text-[var(--accent-cta-text)] hover:opacity-90 active:scale-95'
                 }`}
               >
                 {isCurrentDownloading ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Mengunduh...</span>
+                    <span>{t('btnDownloading')}</span>
                   </>
                 ) : isCurrentSuccess ? (
                   <>
                     <Check className="w-3.5 h-3.5" />
-                    <span>Diunduh</span>
+                    <span>{t('btnDownloaded')}</span>
                   </>
                 ) : isCurrentError ? (
                   <>
                     <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Coba Lagi</span>
+                    <span>{t('btnRetry')}</span>
                   </>
                 ) : (
                   <>
                     <Download className="w-3.5 h-3.5" />
-                    <span>{isHD ? 'Unduh HD' : 'Unduh'}</span>
+                    <span>{isHD ? t('btnDownloadHD') : t('btnDownload')}</span>
                   </>
                 )}
               </button>

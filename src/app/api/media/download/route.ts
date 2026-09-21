@@ -193,16 +193,59 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Safely redirect to authorized media resource with anti-caching & RFC 6266 headers
+    // Stream media directly with attachment disposition to force immediate file download
+    try {
+      const upstreamRes = await fetch(payload.targetUrl, {
+        method: 'GET',
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          Accept: '*/*',
+        },
+        signal: AbortSignal.timeout(30000),
+      });
+
+      if (upstreamRes.ok && upstreamRes.body) {
+        const streamHeaders = new Headers();
+        streamHeaders.set('X-Correlation-ID', correlationId);
+        streamHeaders.set(
+          'Content-Disposition',
+          formatContentDisposition(payload.filename)
+        );
+        streamHeaders.set(
+          'Content-Type',
+          payload.mimeType ||
+            upstreamRes.headers.get('content-type') ||
+            'application/octet-stream'
+        );
+        const contentLength = upstreamRes.headers.get('content-length');
+        if (contentLength) {
+          streamHeaders.set('Content-Length', contentLength);
+        }
+        streamHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+        streamHeaders.set('Pragma', 'no-cache');
+        streamHeaders.set('Expires', '0');
+        streamHeaders.set('X-Content-Type-Options', 'nosniff');
+
+        return new Response(upstreamRes.body, {
+          status: 200,
+          headers: streamHeaders,
+        });
+      }
+    } catch (streamErr) {
+      Logger.warn('[Download] Direct streaming failed, falling back to redirect', {
+        error: streamErr instanceof Error ? streamErr.message : String(streamErr),
+        correlationId,
+      });
+    }
+
+    // Fallback: Safely redirect to authorized media resource
     return NextResponse.redirect(payload.targetUrl, {
       status: 302,
       headers: {
         'X-Correlation-ID': correlationId,
         'Content-Disposition': formatContentDisposition(payload.filename),
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        'X-Content-Type-Options': 'nosniff',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
       },
     });
   } catch (err: unknown) {

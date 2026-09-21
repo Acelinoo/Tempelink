@@ -10,6 +10,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { PlatformDetector } from '@/lib/platforms/detector';
+import { useApp } from '@/lib/context/app-context';
 
 interface BatchInputFormProps {
   onSubmitBatch: (urls: string[]) => Promise<void>;
@@ -22,6 +23,7 @@ export const BatchInputForm: React.FC<BatchInputFormProps> = ({
   isLoading,
   maxBatchSize = 10,
 }) => {
+  const { t } = useApp();
   const [text, setText] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -101,13 +103,13 @@ export const BatchInputForm: React.FC<BatchInputFormProps> = ({
   const handlePasteClipboard = async () => {
     try {
       if (!navigator.clipboard) {
-        setNotice('Izin clipboard tidak tersedia.');
+        setNotice(t('clipboardPermissionDenied'));
         setTimeout(() => setNotice(null), 3000);
         return;
       }
       const clipText = await navigator.clipboard.readText();
       if (!clipText.trim()) {
-        setNotice('Clipboard kosong.');
+        setNotice(t('clipboardEmpty'));
         setTimeout(() => setNotice(null), 2500);
         return;
       }
@@ -116,10 +118,10 @@ export const BatchInputForm: React.FC<BatchInputFormProps> = ({
         const separator = prev.trim().length > 0 ? '\n' : '';
         return `${prev.trim()}${separator}${clipText.trim()}`;
       });
-      setNotice('Tautan berhasil ditempel dari clipboard.');
+      setNotice(t('clipboardDetected'));
       setTimeout(() => setNotice(null), 2500);
     } catch {
-      setNotice('Gagal membaca clipboard. Silakan gunakan Ctrl+V.');
+      setNotice(t('clipboardReadFailed'));
       setTimeout(() => setNotice(null), 3000);
     }
   };
@@ -144,12 +146,12 @@ export const BatchInputForm: React.FC<BatchInputFormProps> = ({
     >
       {/* Notice Banner */}
       {notice && (
-        <div className="w-full p-2.5 rounded-lg bg-cyan-950/40 border border-cyan-800/60 text-cyan-200 text-xs flex items-center justify-between animate-fade-in">
+        <div className="w-full p-2.5 rounded-lg bg-app-elevated border border-app text-app-main text-xs flex items-center justify-between animate-fade-in">
           <span>{notice}</span>
           <button
             type="button"
             onClick={() => setNotice(null)}
-            className="text-cyan-400 hover:text-white"
+            className="text-app-subtle hover:text-app-main cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -157,13 +159,13 @@ export const BatchInputForm: React.FC<BatchInputFormProps> = ({
       )}
 
       {/* Main Textarea Container */}
-      <div className="relative rounded-2xl bg-slate-900/90 border border-slate-800 focus-within:border-cyan-500/80 focus-within:ring-2 focus-within:ring-cyan-500/20 transition-all duration-200 shadow-xl overflow-hidden">
+      <div className="relative rounded-2xl bg-app-surface border border-app focus-within:border-app-cta focus-within:ring-2 focus-within:ring-app-cta/20 transition-all duration-200 shadow-md overflow-hidden">
         {/* Top Control Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-slate-950/60 border-b border-slate-800/80 text-xs text-slate-400">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-app-elevated border-b border-app text-xs text-app-muted">
           <div className="flex items-center space-x-2">
-            <ListOrdered className="w-4 h-4 text-cyan-400" />
-            <span className="font-medium text-slate-200">
-              Input Banyak Tautan (1 baris per URL)
+            <ListOrdered className="w-4 h-4 text-app-cta" />
+            <span className="font-semibold text-app-main">
+              {t('batchInputSummary')}
             </span>
           </div>
 
@@ -171,21 +173,20 @@ export const BatchInputForm: React.FC<BatchInputFormProps> = ({
             <button
               type="button"
               onClick={handlePasteClipboard}
-              className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors text-xs font-medium cursor-pointer"
+              className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md bg-app-surface border border-app hover:opacity-90 text-app-main transition-colors text-xs font-semibold cursor-pointer"
             >
-              <Clipboard className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="hidden sm:inline">Tempel dari Clipboard</span>
-              <span className="sm:hidden">Paste</span>
+              <Clipboard className="w-3.5 h-3.5 text-app-cta" />
+              <span>{t('btnPaste')}</span>
             </button>
 
             {text.length > 0 && (
               <button
                 type="button"
                 onClick={handleClear}
-                className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md bg-slate-800/60 hover:bg-rose-950/40 hover:text-rose-300 text-slate-400 transition-colors text-xs cursor-pointer"
+                className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md bg-app-surface border border-app hover:text-rose-500 text-app-muted transition-colors text-xs cursor-pointer font-semibold"
               >
                 <X className="w-3.5 h-3.5" />
-                <span>Hapus</span>
+                <span>{t('btnClear')}</span>
               </button>
             )}
           </div>
@@ -196,55 +197,51 @@ export const BatchInputForm: React.FC<BatchInputFormProps> = ({
           rows={5}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={`Tempel beberapa tautan video atau postingan di sini...\nContoh:\nhttps://www.tiktok.com/@user/video/...\nhttps://www.instagram.com/reel/...\nhttps://www.youtube.com/watch?v=...\nhttps://x.com/.../status/...`}
-          className="w-full p-4 bg-transparent text-slate-100 placeholder-slate-500 text-sm font-mono leading-relaxed focus:outline-none resize-y min-h-[140px] max-h-[360px]"
+          placeholder={t('batchInputPlaceholder')}
+          className="w-full p-4 bg-[var(--input-bg)] text-app-main placeholder:text-app-subtle text-sm font-mono leading-relaxed focus:outline-none resize-y min-h-[140px] max-h-[360px]"
         />
 
         {/* Bottom Status & Counter Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-slate-950/70 border-t border-slate-800/80 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-app-elevated border-t border-app text-xs">
           {/* Analysis Pills */}
           <div className="flex flex-wrap items-center gap-2">
             <span
-              className={`px-2.5 py-0.5 rounded-full font-medium ${
+              className={`px-2.5 py-0.5 rounded-full font-bold ${
                 analysis.isOverLimit
-                  ? 'bg-rose-950/80 border border-rose-800/60 text-rose-300'
+                  ? 'bg-rose-950/60 border border-rose-700 text-rose-300'
                   : analysis.uniqueCount > 0
-                    ? 'bg-cyan-950/60 border border-cyan-800/40 text-cyan-300'
-                    : 'bg-slate-800/80 text-slate-400'
+                    ? 'bg-app-cta text-[var(--accent-cta-text)]'
+                    : 'bg-app-surface text-app-muted border border-app'
               }`}
             >
-              {analysis.uniqueCount} / {maxBatchSize} Tautan
+              {analysis.uniqueCount} / {maxBatchSize}
             </span>
 
             {analysis.duplicateCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-amber-950/60 border border-amber-800/40 text-amber-300 font-medium">
-                {analysis.duplicateCount} duplikat diabaikan
+              <span className="px-2 py-0.5 rounded-full bg-amber-950/60 border border-amber-700 text-amber-300 font-medium">
+                {analysis.duplicateCount} {t('batchDuplicateCount')}
               </span>
             )}
 
             {analysis.uniqueCount > 0 && (
-              <span className="text-slate-400 hidden sm:inline">
-                • {analysis.validCount} platform terverifikasi
+              <span className="text-app-muted hidden sm:inline">
+                • {analysis.validCount} {t('batchValidCount')}
               </span>
             )}
           </div>
 
           {/* Overlimit Warning */}
           {analysis.isOverLimit && (
-            <div className="flex items-center space-x-1.5 text-rose-400 text-xs font-semibold">
+            <div className="flex items-center space-x-1.5 text-rose-500 text-xs font-bold">
               <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>Maksimal {maxBatchSize} URL per batch.</span>
+              <span>{t('batchOverLimit')}</span>
             </div>
           )}
         </div>
       </div>
 
       {/* Action Submit Button */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
-        <p className="text-xs text-slate-400 text-center sm:text-left">
-          Proses antrean dikontrol maksimal 2 pemrosesan bersamaan untuk mencegah pembatasan penyedia.
-        </p>
-
+      <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-1">
         <button
           type="submit"
           disabled={
@@ -256,20 +253,20 @@ export const BatchInputForm: React.FC<BatchInputFormProps> = ({
             isLoading ||
             analysis.uniqueCount === 0 ||
             analysis.isOverLimit
-              ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-60'
-              : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 active:scale-[0.98]'
+              ? 'bg-app-surface text-app-subtle border border-app cursor-not-allowed opacity-60'
+              : 'bg-app-cta text-[var(--accent-cta-text)] hover:opacity-90 active:scale-95 shadow-md'
           }`}
         >
           {isLoading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Mendaftarkan Antrean...</span>
+              <span>{t('btnStartingBatch')}</span>
             </>
           ) : (
             <>
               <Play className="w-4 h-4 fill-current" />
               <span>
-                Mulai Antrean ({analysis.uniqueCount} Tautan)
+                {t('btnStartBatch')} ({analysis.uniqueCount})
               </span>
             </>
           )}

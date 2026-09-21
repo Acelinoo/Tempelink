@@ -29,13 +29,16 @@ import {
 import {
   Zap,
   CheckCircle2,
-  Shield,
+  ShieldCheck,
   EyeOff,
   Link2,
   Layers,
 } from 'lucide-react';
+import { useApp } from '@/lib/context/app-context';
+import { executeImmediateDownload } from '@/lib/download/client-download';
 
 export default function HomePage() {
+  const { t } = useApp();
   const [activeTab, setActiveTab] = useState<'single' | 'batch'>('single');
 
   // Single URL Mode State
@@ -58,7 +61,7 @@ export default function HomePage() {
   // History Modal State
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
-  // Synchronize local anonymous history via useSyncExternalStore (React 19 / SSR friendly)
+  // Synchronize local anonymous history via useSyncExternalStore
   const historyRaw = useSyncExternalStore(
     subscribeHistory,
     getHistorySnapshot,
@@ -114,7 +117,7 @@ export default function HomePage() {
 
       if (!res.ok || !data.success) {
         setError({
-          message: data?.error?.message || 'Gagal memproses URL.',
+          message: data?.error?.message || t('errorDefault'),
           code: data?.error?.code || 'RESOLUTION_FAILED',
         });
         return;
@@ -123,8 +126,7 @@ export default function HomePage() {
       setResolvedMedia(data.data);
     } catch {
       setError({
-        message:
-          'Koneksi jaringan gagal. Pastikan koneksi internet Anda aktif.',
+        message: t('networkError'),
         code: 'NETWORK_ERROR',
       });
     } finally {
@@ -132,7 +134,7 @@ export default function HomePage() {
     }
   };
 
-  // Single URL Capability Selection & Download
+  // Single URL Capability Selection & Direct File Download
   const handleSelectCapability = async (cap: Capability) => {
     if (!resolvedMedia || downloadState === 'downloading') return;
     setSelectedCapId(cap.id);
@@ -140,30 +142,25 @@ export default function HomePage() {
     setError(null);
 
     try {
-      const res = await fetch('/api/media/download', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          mediaId: resolvedMedia.id,
-          capabilityId: cap.id,
-          sourceUrl: resolvedMedia.sourceUrl,
-          downloadToken: cap.downloadToken || undefined,
-        }),
+      const extension =
+        cap.format === 'jpg'
+          ? 'jpg'
+          : cap.format === 'png'
+          ? 'png'
+          : cap.format === 'mp3'
+          ? 'mp3'
+          : 'mp4';
+      const cleanPlatform = resolvedMedia.platform || 'media';
+      const cleanMediaId = resolvedMedia.id || 'download';
+      const qualityTag = cap.qualityCategory || 'standard';
+      const filename = `${cleanPlatform}_${cleanMediaId}_${qualityTag}.${extension}`;
+
+      // Trigger immediate direct file download without opening video player tab
+      await executeImmediateDownload({
+        token: cap.downloadToken,
+        directUrl: cap.downloadUrl,
+        filename,
       });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        setDownloadState('error');
-        setError({
-          message:
-            data?.error?.message || 'Opsi unduhan sedang tidak tersedia.',
-          code: data?.error?.code || 'DOWNLOAD_UNAVAILABLE',
-        });
-        return;
-      }
 
       // Record in local anonymous history
       saveLocalHistoryItem({
@@ -177,17 +174,13 @@ export default function HomePage() {
 
       setDownloadState('success');
 
-      if (data.data?.downloadUrl) {
-        window.open(data.data.downloadUrl, '_blank');
-      }
-
       setTimeout(() => {
         setDownloadState('idle');
-      }, 3000);
+      }, 3500);
     } catch {
       setDownloadState('error');
       setError({
-        message: 'Gagal menginisiasi unduhan media.',
+        message: t('downloadFailed'),
         code: 'DOWNLOAD_FAILED',
       });
     }
@@ -209,7 +202,7 @@ export default function HomePage() {
 
       if (!res.ok || !data.success) {
         setError({
-          message: data?.error?.message || 'Gagal mendaftarkan antrean batch.',
+          message: data?.error?.message || t('batchCreateFailed'),
           code: data?.error?.code || 'BATCH_FAILED',
         });
         return;
@@ -218,8 +211,7 @@ export default function HomePage() {
       setActiveBatch(data.data);
     } catch {
       setError({
-        message:
-          'Koneksi gagal saat mendaftarkan batch. Pastikan koneksi internet aktif.',
+        message: t('networkError'),
         code: 'NETWORK_ERROR',
       });
     } finally {
@@ -254,7 +246,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-app-main text-app-main transition-colors duration-200">
       <Navbar
         onOpenHistory={() => setIsHistoryOpen(true)}
         historyCount={historyItems.length}
@@ -263,22 +255,22 @@ export default function HomePage() {
       <main className="flex-1 flex flex-col items-center justify-start px-3 sm:px-6 pt-10 sm:pt-16 pb-16 max-w-4xl mx-auto w-full">
         {/* Hero Section */}
         <div className="text-center mb-6 sm:mb-8 space-y-3">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-xs font-medium text-cyan-400">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full border border-app bg-app-surface text-xs font-semibold text-app-cta shadow-sm">
             <Zap className="w-3.5 h-3.5" />
-            <span>Deteksi Otomatis & Resolusi Asli</span>
+            <span>{t('heroBadge')}</span>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-white max-w-2xl mx-auto leading-tight">
-            Universal Media Utility Platform
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-app-main max-w-2xl mx-auto leading-tight">
+            {t('heroTitle')}
           </h1>
 
-          <p className="text-xs sm:text-sm md:text-base text-slate-400 max-w-xl mx-auto leading-relaxed px-2">
-            Tempel tautan video atau media untuk memeriksa kapabilitas dan resolusi yang benar-benar tersedia secara langsung.
+          <p className="text-xs sm:text-sm md:text-base text-app-muted max-w-xl mx-auto leading-relaxed px-2">
+            {t('heroDescription')}
           </p>
         </div>
 
         {/* Mode Navigation Tabs (Single vs Batch) */}
-        <div className="w-full max-w-md mx-auto mb-6 p-1 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-center gap-1 shadow-inner">
+        <div className="w-full max-w-md mx-auto mb-6 p-1 rounded-xl bg-app-surface border border-app flex items-center justify-center gap-1 shadow-sm">
           <button
             type="button"
             onClick={() => {
@@ -287,12 +279,12 @@ export default function HomePage() {
             }}
             className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'single'
-                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                ? 'bg-app-cta text-[var(--accent-cta-text)] shadow-sm'
+                : 'text-app-muted hover:text-app-main hover:bg-app-elevated'
             }`}
           >
             <Link2 className="w-3.5 h-3.5" />
-            <span>Tautan Tunggal</span>
+            <span>{t('tabSingle')}</span>
           </button>
 
           <button
@@ -303,12 +295,12 @@ export default function HomePage() {
             }}
             className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'batch'
-                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                ? 'bg-app-cta text-[var(--accent-cta-text)] shadow-sm'
+                : 'text-app-muted hover:text-app-main hover:bg-app-elevated'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>Batch & Antrean (Max 10)</span>
+            <span>{t('tabBatch')}</span>
           </button>
         </div>
 
@@ -381,99 +373,99 @@ export default function HomePage() {
         </div>
 
         {/* Value Proposition & Integrity Pillars */}
-        <div className="w-full border-t border-slate-800/80 pt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
-          <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800/60 flex flex-col space-y-2">
-            <div className="w-8 h-8 rounded-lg bg-cyan-950/60 text-cyan-400 border border-cyan-800/40 flex items-center justify-center">
+        <div className="w-full border-t border-app pt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
+          <div className="p-4 rounded-xl bg-app-surface border border-app flex flex-col space-y-2 shadow-sm">
+            <div className="w-8 h-8 rounded-lg bg-app-elevated border border-app text-app-cta flex items-center justify-center">
               <CheckCircle2 className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-bold text-white">Kejujuran Resolusi</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Kami tidak pernah memalsukan label HD atau melakukan upscaling palsu. Opsi yang tampil adalah opsi nyata dari sumber.
+            <h3 className="text-sm font-bold text-app-main">{t('pillarHonestyTitle')}</h3>
+            <p className="text-xs text-app-muted leading-relaxed">
+              {t('pillarHonestyDesc')}
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800/60 flex flex-col space-y-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 flex items-center justify-center">
-              <Shield className="w-4 h-4" />
+          <div className="p-4 rounded-xl bg-app-surface border border-app flex flex-col space-y-2 shadow-sm">
+            <div className="w-8 h-8 rounded-lg bg-app-elevated border border-app text-app-cta flex items-center justify-center">
+              <ShieldCheck className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-bold text-white">Bebas Iklan & Jebakan</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Tidak ada tombol unduh palsu, redirect malware, ataupun popup mengganggu. Tempelink berfokus murni pada utilitas.
+            <h3 className="text-sm font-bold text-app-main">{t('pillarSafetyTitle')}</h3>
+            <p className="text-xs text-app-muted leading-relaxed">
+              {t('pillarSafetyDesc')}
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800/60 flex flex-col space-y-2">
-            <div className="w-8 h-8 rounded-lg bg-purple-950/60 text-purple-400 border border-purple-800/40 flex items-center justify-center">
+          <div className="p-4 rounded-xl bg-app-surface border border-app flex flex-col space-y-2 shadow-sm">
+            <div className="w-8 h-8 rounded-lg bg-app-elevated border border-app text-app-cta flex items-center justify-center">
               <EyeOff className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-bold text-white">Privasi Pengguna</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Gunakan langsung tanpa registrasi. Riwayat disimpan secara lokal di browser perangkat Anda dan tidak dikirim ke server.
+            <h3 className="text-sm font-bold text-app-main">{t('pillarPrivacyTitle')}</h3>
+            <p className="text-xs text-app-muted leading-relaxed">
+              {t('pillarPrivacyDesc')}
             </p>
           </div>
         </div>
 
         {/* Platform Directory & Internal Linking */}
-        <div className="w-full border-t border-slate-800/80 pt-10 pb-4 space-y-4 text-left">
+        <div className="w-full border-t border-app pt-10 pb-4 space-y-4 text-left">
           <div className="flex items-center space-x-2">
-            <Layers className="w-4 h-4 text-cyan-400" />
-            <h2 className="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">
-              Pengunduh Berdasarkan Platform
+            <Layers className="w-4 h-4 text-app-cta" />
+            <h2 className="text-xs sm:text-sm font-bold text-app-main uppercase tracking-wider">
+              {t('platformDirectoryTitle')}
             </h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
             <Link
               href="/tiktok-downloader"
-              className="p-3 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/60 text-xs text-slate-300 hover:text-white transition-all flex flex-col items-center text-center space-y-1"
+              className="p-3 rounded-xl bg-app-surface border border-app hover:border-app-cta hover:bg-app-elevated text-xs text-app-muted hover:text-app-main transition-all flex flex-col items-center text-center space-y-1 shadow-sm"
             >
-              <span className="font-semibold text-white">TikTok</span>
-              <span className="text-[10px] text-slate-500">Video & Audio</span>
+              <span className="font-bold text-app-main">TikTok</span>
+              <span className="text-[10px] text-app-subtle">Video & Audio</span>
             </Link>
             <Link
               href="/instagram-downloader"
-              className="p-3 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/60 text-xs text-slate-300 hover:text-white transition-all flex flex-col items-center text-center space-y-1"
+              className="p-3 rounded-xl bg-app-surface border border-app hover:border-app-cta hover:bg-app-elevated text-xs text-app-muted hover:text-app-main transition-all flex flex-col items-center text-center space-y-1 shadow-sm"
             >
-              <span className="font-semibold text-white">Instagram</span>
-              <span className="text-[10px] text-slate-500">Reels & Foto</span>
+              <span className="font-bold text-app-main">Instagram</span>
+              <span className="text-[10px] text-app-subtle">Reels & Foto</span>
             </Link>
             <Link
               href="/youtube-downloader"
-              className="p-3 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/60 text-xs text-slate-300 hover:text-white transition-all flex flex-col items-center text-center space-y-1"
+              className="p-3 rounded-xl bg-app-surface border border-app hover:border-app-cta hover:bg-app-elevated text-xs text-app-muted hover:text-app-main transition-all flex flex-col items-center text-center space-y-1 shadow-sm"
             >
-              <span className="font-semibold text-white">YouTube</span>
-              <span className="text-[10px] text-slate-500">Shorts & Video</span>
+              <span className="font-bold text-app-main">YouTube</span>
+              <span className="text-[10px] text-app-subtle">Shorts & Video</span>
             </Link>
             <Link
               href="/twitter-downloader"
-              className="p-3 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/60 text-xs text-slate-300 hover:text-white transition-all flex flex-col items-center text-center space-y-1"
+              className="p-3 rounded-xl bg-app-surface border border-app hover:border-app-cta hover:bg-app-elevated text-xs text-app-muted hover:text-app-main transition-all flex flex-col items-center text-center space-y-1 shadow-sm"
             >
-              <span className="font-semibold text-white">X / Twitter</span>
-              <span className="text-[10px] text-slate-500">Video & Klip</span>
+              <span className="font-bold text-app-main">X / Twitter</span>
+              <span className="text-[10px] text-app-subtle">Video & Klip</span>
             </Link>
             <Link
               href="/facebook-downloader"
-              className="p-3 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/60 text-xs text-slate-300 hover:text-white transition-all flex flex-col items-center text-center space-y-1"
+              className="p-3 rounded-xl bg-app-surface border border-app hover:border-app-cta hover:bg-app-elevated text-xs text-app-muted hover:text-app-main transition-all flex flex-col items-center text-center space-y-1 shadow-sm"
             >
-              <span className="font-semibold text-white">Facebook</span>
-              <span className="text-[10px] text-slate-500">Reels & HD</span>
+              <span className="font-bold text-app-main">Facebook</span>
+              <span className="text-[10px] text-app-subtle">Reels & HD</span>
             </Link>
             <Link
               href="/pinterest-downloader"
-              className="p-3 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/60 text-xs text-slate-300 hover:text-white transition-all flex flex-col items-center text-center space-y-1"
+              className="p-3 rounded-xl bg-app-surface border border-app hover:border-app-cta hover:bg-app-elevated text-xs text-app-muted hover:text-app-main transition-all flex flex-col items-center text-center space-y-1 shadow-sm"
             >
-              <span className="font-semibold text-white">Pinterest</span>
-              <span className="text-[10px] text-slate-500">Pin & Gambar</span>
+              <span className="font-bold text-app-main">Pinterest</span>
+              <span className="text-[10px] text-app-subtle">Pin & Gambar</span>
             </Link>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="w-full border-t border-slate-800/80 py-6 text-center text-xs text-slate-500">
+      <footer className="w-full border-t border-app py-6 text-center text-xs text-app-subtle bg-app-surface/50">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>&copy; 2026 Tempelink. Seluruh hak cipta dilindungi.</span>
-          <span className="font-mono text-[11px] text-cyan-400">
-            Phase 8 • SEO, Platform Pages & Discoverability
+          <span>{t('footerCopyright')}</span>
+          <span className="font-mono text-[11px] text-app-cta">
+            {t('footerTagline')}
           </span>
         </div>
       </footer>

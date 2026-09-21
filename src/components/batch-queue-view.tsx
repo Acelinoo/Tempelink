@@ -1,27 +1,29 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   BatchSummaryResponse,
-  JobStatus,
   QueueJob,
+  JobStatus,
 } from '@/lib/types/queue';
 import {
-  Loader2,
   CheckCircle2,
   AlertCircle,
-  XCircle,
   Clock,
+  Loader2,
+  XCircle,
   Download,
   RotateCw,
   Ban,
-  Film,
+  PlusCircle,
   Video,
+  Film,
   PlaySquare,
   Share2,
   Pin,
-  PlusCircle,
 } from 'lucide-react';
+import { useApp } from '@/lib/context/app-context';
+import { executeImmediateDownload } from '@/lib/download/client-download';
 
 interface BatchQueueViewProps {
   initialBatch: BatchSummaryResponse;
@@ -29,7 +31,6 @@ interface BatchQueueViewProps {
   onRecordHistory?: (job: QueueJob) => void;
 }
 
-// Crisp X Logo icon
 const XLogo: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     viewBox="0 0 24 24"
@@ -51,13 +52,13 @@ const PLATFORM_ICONS: Record<string, React.ComponentType<{ className?: string }>
 };
 
 const PLATFORM_COLORS: Record<string, string> = {
-  tiktok: 'text-pink-400 bg-pink-950/40 border-pink-800/40',
-  instagram: 'text-purple-400 bg-purple-950/40 border-purple-800/40',
-  youtube: 'text-red-400 bg-red-950/40 border-red-800/40',
-  x: 'text-slate-200 bg-slate-800/60 border-slate-700/50',
-  facebook: 'text-blue-400 bg-blue-950/40 border-blue-800/40',
-  pinterest: 'text-rose-400 bg-rose-950/40 border-rose-800/40',
-  unknown: 'text-slate-400 bg-slate-900 border-slate-800',
+  tiktok: 'text-rose-500 bg-app-elevated border-app',
+  instagram: 'text-amber-600 bg-app-elevated border-app',
+  youtube: 'text-red-600 bg-app-elevated border-app',
+  x: 'text-app-main bg-app-elevated border-app',
+  facebook: 'text-blue-600 bg-app-elevated border-app',
+  pinterest: 'text-rose-700 bg-app-elevated border-app',
+  unknown: 'text-app-subtle bg-app-elevated border-app',
 };
 
 export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
@@ -65,6 +66,7 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
   onNewBatch,
   onRecordHistory,
 }) => {
+  const { t } = useApp();
   const [batch, setBatch] = useState<BatchSummaryResponse>(initialBatch);
   const [isCancelling, setIsCancelling] = useState(false);
   const [retryingJobId, setRetryingJobId] = useState<string | null>(null);
@@ -88,7 +90,7 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
         setBatch(json.data);
       }
     } catch {
-      // Network hiccup; will retry next interval
+      // Ignore
     }
   }, [batch.batchId]);
 
@@ -101,7 +103,7 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
       return;
     }
 
-    pollingRef.current = setInterval(fetchBatchStatus, 1500);
+    pollingRef.current = setInterval(fetchBatchStatus, 2000);
     return () => {
       if (pollingRef.current) {
         clearInterval(pollingRef.current);
@@ -110,15 +112,14 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
   }, [isTerminal, fetchBatchStatus]);
 
   const handleCancelBatch = async () => {
-    if (isCancelling || isTerminal) return;
     setIsCancelling(true);
     try {
       const res = await fetch(`/api/batch/${batch.batchId}/cancel`, {
         method: 'POST',
       });
       const json = await res.json();
-      if (json.success && json.data?.batch) {
-        setBatch(json.data.batch);
+      if (json.success && json.data) {
+        setBatch(json.data);
       }
     } catch {
       // Ignore
@@ -128,7 +129,6 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
   };
 
   const handleRetryJob = async (jobId: string) => {
-    if (retryingJobId) return;
     setRetryingJobId(jobId);
     try {
       const res = await fetch(`/api/batch/${batch.batchId}/retry`, {
@@ -152,68 +152,76 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
     setDownloadingJobId(job.id);
 
     try {
-      const token = job.selectedCapability.downloadToken;
-      if (token) {
-        // Direct download using GET route with signed token
-        const downloadUrl = `/api/media/download?token=${encodeURIComponent(token)}`;
-        window.open(downloadUrl, '_blank');
-      } else if (job.selectedCapability.downloadUrl) {
-        window.open(job.selectedCapability.downloadUrl, '_blank');
-      }
+      const cap = job.selectedCapability;
+      const filename = `${job.platform || 'media'}_${job.id.slice(0, 8)}_${cap.format || 'mp4'}.${cap.format === 'jpg' ? 'jpg' : 'mp4'}`;
+      await executeImmediateDownload({
+        token: cap.downloadToken,
+        directUrl: cap.downloadUrl,
+        filename,
+      });
 
       if (onRecordHistory) {
         onRecordHistory(job);
       }
     } catch {
-      // Ignore
+      // Handled inside helper
     } finally {
       setTimeout(() => setDownloadingJobId(null), 1500);
     }
   };
 
-  // Status badge config
+  const handleDownloadAll = async () => {
+    const readyJobs = batch.jobs.filter(
+      (j) => j.status === 'COMPLETED' && j.selectedCapability
+    );
+    for (const job of readyJobs) {
+      await handleDownloadItem(job);
+      await new Promise((r) => setTimeout(r, 600));
+    }
+  };
+
   const renderStatusBadge = (status: JobStatus) => {
     switch (status) {
       case 'PENDING':
         return (
-          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-xs font-medium border border-slate-700/60">
-            <Clock className="w-3 h-3 text-slate-400" />
-            <span>Menunggu</span>
+          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-app-surface text-app-subtle text-xs font-semibold border border-app">
+            <Clock className="w-3 h-3" />
+            <span>{t('batchStatusPending')}</span>
           </span>
         );
       case 'RESOLVING':
         return (
-          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-cyan-950/60 text-cyan-300 text-xs font-medium border border-cyan-800/60 animate-pulse">
-            <Loader2 className="w-3 h-3 animate-spin text-cyan-400" />
-            <span>Memproses</span>
+          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-app-elevated text-app-cta text-xs font-semibold border border-app animate-pulse">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            <span>{t('batchStatusProcessing')}</span>
           </span>
         );
       case 'READY':
       case 'COMPLETED':
         return (
-          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-emerald-950/60 text-emerald-300 text-xs font-medium border border-emerald-800/60">
+          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-emerald-950/40 text-emerald-400 text-xs font-semibold border border-emerald-800/40">
             <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-            <span>Siap Diunduh</span>
+            <span>{t('batchStatusCompleted')}</span>
           </span>
         );
       case 'DOWNLOADING':
         return (
-          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-blue-950/60 text-blue-300 text-xs font-medium border border-blue-800/60">
-            <Loader2 className="w-3 h-3 animate-spin text-blue-400" />
-            <span>Mengunduh</span>
+          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-app-elevated text-app-cta text-xs font-semibold border border-app">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            <span>{t('btnDownloading')}</span>
           </span>
         );
       case 'FAILED':
         return (
-          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-rose-950/60 text-rose-300 text-xs font-medium border border-rose-800/60">
+          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-rose-950/40 text-rose-400 text-xs font-semibold border border-rose-800/40">
             <AlertCircle className="w-3 h-3 text-rose-400" />
-            <span>Gagal</span>
+            <span>{t('batchStatusFailed')}</span>
           </span>
         );
       case 'CANCELLED':
         return (
-          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-slate-900 text-slate-500 text-xs font-medium border border-slate-800">
-            <XCircle className="w-3 h-3 text-slate-500" />
+          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-app-surface text-app-subtle text-xs font-semibold border border-app">
+            <XCircle className="w-3 h-3" />
             <span>Dibatalkan</span>
           </span>
         );
@@ -228,20 +236,20 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col space-y-6 animate-fade-in">
       {/* Batch Header Overview Card */}
-      <div className="p-4 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-4">
+      <div className="p-4 sm:p-6 rounded-2xl bg-app-surface border border-app shadow-md space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-mono text-cyan-400 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800/40">
+              <span className="text-xs font-mono text-app-cta bg-app-elevated px-2 py-0.5 rounded border border-app font-bold">
                 Batch #{batch.batchId.slice(0, 8)}
               </span>
-              <span className="text-xs text-slate-500">•</span>
-              <span className="text-xs font-medium text-slate-400">
+              <span className="text-xs text-app-subtle">•</span>
+              <span className="text-xs font-semibold text-app-muted">
                 {batch.total} Tautan Terdaftar
               </span>
             </div>
-            <h2 className="text-lg sm:text-xl font-bold text-white mt-1">
-              Proses Antrean Unduhan Media
+            <h2 className="text-lg sm:text-xl font-bold text-app-main mt-1">
+              {t('batchProgress')}
             </h2>
           </div>
 
@@ -252,21 +260,32 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
                 type="button"
                 onClick={handleCancelBatch}
                 disabled={isCancelling}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/50 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-800 text-xs font-semibold transition-all cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-app-elevated hover:bg-rose-950/40 text-app-muted hover:text-rose-400 border border-app text-xs font-semibold transition-all cursor-pointer"
               >
                 {isCancelling ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
-                  <Ban className="w-3.5 h-3.5 text-rose-400" />
+                  <Ban className="w-3.5 h-3.5 text-rose-500" />
                 )}
-                <span>Batalkan Antrean</span>
+                <span>{t('btnCancelBatch')}</span>
+              </button>
+            )}
+
+            {batch.completed > 0 && (
+              <button
+                type="button"
+                onClick={handleDownloadAll}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>{t('btnDownloadAll')}</span>
               </button>
             )}
 
             <button
               type="button"
               onClick={onNewBatch}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold shadow-md shadow-cyan-600/20 transition-all cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-app-cta text-[var(--accent-cta-text)] hover:opacity-90 text-xs font-bold shadow-md transition-all cursor-pointer"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               <span>Batch Baru</span>
@@ -274,48 +293,48 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
           </div>
         </div>
 
-        {/* Deterministic Progress Bar */}
+        {/* Progress Bar */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-300 font-medium">
+            <span className="text-app-muted font-medium">
               Progress:{' '}
-              <strong className="text-white">
-                {batch.completed} dari {batch.total} selesai
+              <strong className="text-app-main">
+                {batch.completed} / {batch.total} {t('batchCompleted')}
               </strong>
             </span>
-            <span className="font-mono text-cyan-400">{progressPct}%</span>
+            <span className="font-mono text-app-cta font-bold">{progressPct}%</span>
           </div>
 
-          <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+          <div className="w-full h-2.5 rounded-full bg-app-elevated overflow-hidden border border-app">
             <div
               className={`h-full transition-all duration-300 rounded-full ${
                 batch.failed > 0 && batch.completed === 0
                   ? 'bg-rose-500'
                   : batch.status === 'COMPLETED'
                     ? 'bg-emerald-500'
-                    : 'bg-gradient-to-r from-cyan-500 to-blue-500'
+                    : 'bg-app-cta'
               }`}
               style={{ width: `${progressPct}%` }}
             />
           </div>
 
           {/* Counts breakdown */}
-          <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-slate-400">
+          <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-app-subtle">
             <span className="flex items-center space-x-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
               <span>Selesai: {batch.completed}</span>
             </span>
 
             {batch.failed > 0 && (
               <span className="flex items-center space-x-1 text-rose-400">
-                <span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />
+                <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
                 <span>Gagal: {batch.failed}</span>
               </span>
             )}
 
             {batch.cancelled > 0 && (
-              <span className="flex items-center space-x-1 text-slate-500">
-                <span className="w-2 h-2 rounded-full bg-slate-500 inline-block" />
+              <span className="flex items-center space-x-1 text-app-subtle">
+                <span className="w-2 h-2 rounded-full bg-app-subtle inline-block" />
                 <span>Dibatalkan: {batch.cancelled}</span>
               </span>
             )}
@@ -325,8 +344,8 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
 
       {/* Jobs Queue Items List */}
       <div className="space-y-3">
-        <h3 className="text-xs uppercase tracking-wider font-semibold text-slate-400 px-1">
-          Daftar Antrean Item ({batch.jobs.length})
+        <h3 className="text-xs uppercase tracking-wider font-bold text-app-muted px-1">
+          Daftar Antrean ({batch.jobs.length})
         </h3>
 
         <div className="space-y-2.5">
@@ -342,11 +361,10 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
             return (
               <div
                 key={job.id}
-                className="p-3.5 sm:p-4 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md"
+                className="p-3.5 sm:p-4 rounded-xl bg-app-surface border border-app hover:border-app-cta transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm"
               >
                 {/* Left side: Platform & Title */}
                 <div className="flex items-start space-x-3 min-w-0 flex-1">
-                  {/* Platform Icon Badge */}
                   <div
                     className={`w-9 h-9 rounded-lg border flex items-center justify-center flex-shrink-0 mt-0.5 ${colorClass}`}
                     title={job.platform.toUpperCase()}
@@ -354,33 +372,31 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
                     <Icon className="w-4 h-4" />
                   </div>
 
-                  {/* Metadata */}
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex items-center space-x-2">
-                      <span className="text-[11px] font-mono text-slate-500">
+                      <span className="text-[11px] font-mono text-app-subtle">
                         #{index + 1}
                       </span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-app-main">
                         {job.platform}
                       </span>
                       {job.selectedCapability && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-cyan-300 border border-slate-700">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-app-elevated text-app-cta border border-app">
                           {job.selectedCapability.label}
                         </span>
                       )}
                     </div>
 
-                    <p className="text-xs sm:text-sm font-medium text-white truncate max-w-full">
+                    <p className="text-xs sm:text-sm font-semibold text-app-main truncate max-w-full">
                       {job.mediaMetadata?.title || job.sourceUrl}
                     </p>
 
-                    {/* Subtext: Author or Error */}
                     {isFailed ? (
-                      <p className="text-xs text-rose-400 font-medium">
+                      <p className="text-xs text-rose-500 font-medium">
                         Kesalahan: {job.errorMessage || 'Gagal memproses media'}
                       </p>
                     ) : (
-                      <p className="text-[11px] text-slate-500 font-mono truncate">
+                      <p className="text-[11px] text-app-subtle font-mono truncate">
                         {job.sourceUrl}
                       </p>
                     )}
@@ -388,25 +404,23 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
                 </div>
 
                 {/* Right side: Status Badge & Actions */}
-                <div className="flex items-center justify-between sm:justify-end space-x-3 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800/80">
-                  {/* Status Badge */}
+                <div className="flex items-center justify-between sm:justify-end space-x-3 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-app">
                   {renderStatusBadge(job.status)}
 
-                  {/* Action Buttons */}
                   <div>
                     {isCompleted && job.selectedCapability && (
                       <button
                         type="button"
                         onClick={() => handleDownloadItem(job)}
                         disabled={downloadingJobId === job.id}
-                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-app-cta text-[var(--accent-cta-text)] hover:opacity-90 text-xs font-bold shadow-sm transition-all cursor-pointer"
                       >
                         {downloadingJobId === job.id ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         ) : (
                           <Download className="w-3.5 h-3.5" />
                         )}
-                        <span>Unduh</span>
+                        <span>{t('btnDownload')}</span>
                       </button>
                     )}
 
@@ -415,20 +429,20 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
                         type="button"
                         onClick={() => handleRetryJob(job.id)}
                         disabled={retryingJobId === job.id}
-                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all cursor-pointer"
+                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-app-elevated hover:opacity-90 text-app-main text-xs font-semibold border border-app transition-all cursor-pointer"
                       >
                         {retryingJobId === job.id ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         ) : (
-                          <RotateCw className="w-3.5 h-3.5 text-cyan-400" />
+                          <RotateCw className="w-3.5 h-3.5 text-app-cta" />
                         )}
-                        <span>Coba Lagi</span>
+                        <span>{t('btnRetry')}</span>
                       </button>
                     )}
 
                     {isResolving && (
-                      <span className="text-xs text-slate-500 italic">
-                        Menunggu resolver...
+                      <span className="text-xs text-app-subtle italic">
+                        {t('batchStatusProcessing')}...
                       </span>
                     )}
                   </div>
