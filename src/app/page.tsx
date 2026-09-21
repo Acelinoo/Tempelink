@@ -14,6 +14,9 @@ import {
 } from '@/components/capability-selector';
 import { DownloadHistoryModal } from '@/components/download-history-modal';
 import { ErrorAlert } from '@/components/error-alert';
+import { HowToSection } from '@/components/how-to-section';
+import { FeaturesSection } from '@/components/features-section';
+import { FaqSection } from '@/components/faq-section';
 import { PublicMediaResponse } from '@/lib/types/media';
 import { Capability } from '@/lib/types/capability';
 import { BatchSummaryResponse, QueueJob } from '@/lib/types/queue';
@@ -362,13 +365,19 @@ export default function HomePage() {
         )}
 
         {/* Supported Platform Badges */}
-        <div className="w-full mt-8 mb-12">
+        <div className="w-full mt-8 mb-4">
           <PlatformPills
             activePlatformId={
               activeTab === 'single' ? detectedPlatformId : null
             }
           />
         </div>
+
+        {/* How To Use */}
+        <HowToSection />
+
+        {/* Features */}
+        <FeaturesSection />
 
         {/* Value Proposition & Integrity Pillars */}
         <div className="w-full border-t border-app pt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
@@ -402,6 +411,9 @@ export default function HomePage() {
             </p>
           </div>
         </div>
+
+        {/* FAQ */}
+        <FaqSection />
 
         {/* Platform Directory & Internal Linking */}
         <div className="w-full border-t border-app pt-10 pb-4 space-y-4 text-left">
@@ -462,9 +474,23 @@ export default function HomePage() {
       <footer className="w-full border-t border-app py-6 text-center text-xs text-app-subtle bg-app-surface/50">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>{t('footerCopyright')}</span>
-          <span className="font-mono text-[11px] text-app-cta">
-            {t('footerTagline')}
-          </span>
+          <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3">
+            <span className="font-mono text-[11px] text-app-cta">
+              {t('footerTagline')}
+            </span>
+            <span className="hidden sm:inline text-app-surface">|</span>
+            <span className="text-[11px]">
+              {t('footerMadeBy')}{' '}
+              <a
+                href="https://acelino.my.id"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-app-cta hover:underline transition-all"
+              >
+                acelino.my.id
+              </a>
+            </span>
+          </div>
         </div>
       </footer>
 

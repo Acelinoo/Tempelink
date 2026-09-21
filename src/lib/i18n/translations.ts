@@ -95,9 +95,45 @@ export interface Translations {
   downloadFailed: string;
   batchCreateFailed: string;
 
+  // How To Use
+  howToTitle: string;
+  howToStep1Title: string;
+  howToStep1Desc: string;
+  howToStep2Title: string;
+  howToStep2Desc: string;
+  howToStep3Title: string;
+  howToStep3Desc: string;
+
+  // Features
+  featuresTitle: string;
+  featNoWatermark: string;
+  featNoWatermarkDesc: string;
+  featAllDevices: string;
+  featAllDevicesDesc: string;
+  featNoLogin: string;
+  featNoLoginDesc: string;
+  featOrigQuality: string;
+  featOrigQualityDesc: string;
+  featMultiPlatform: string;
+  featMultiPlatformDesc: string;
+  featAudioMp3: string;
+  featAudioMp3Desc: string;
+
+  // FAQ
+  faqTitle: string;
+  faqQ1: string; faqA1: string;
+  faqQ2: string; faqA2: string;
+  faqQ3: string; faqA3: string;
+  faqQ4: string; faqA4: string;
+  faqQ5: string; faqA5: string;
+  faqQ6: string; faqA6: string;
+  faqQ7: string; faqA7: string;
+  faqQ8: string; faqA8: string;
+
   // Footer
   footerCopyright: string;
   footerTagline: string;
+  footerMadeBy: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -204,9 +240,53 @@ export const translations: Record<Language, Translations> = {
     downloadFailed: 'Gagal mengunduh berkas media langsung ke perangkat.',
     batchCreateFailed: 'Gagal mendaftarkan antrean batch baru.',
 
+    // How To Use
+    howToTitle: 'Cara Mengunduh Video, Foto, dan Musik MP3',
+    howToStep1Title: 'Salin Tautan',
+    howToStep1Desc: 'Buka platform pilihan (TikTok, Instagram, YouTube, dll.), temukan konten yang ingin diunduh, lalu salin tautannya.',
+    howToStep2Title: 'Tempel Tautan',
+    howToStep2Desc: 'Tempel tautan yang telah disalin ke kolom input di bagian atas halaman ini, lalu klik tombol Unduh.',
+    howToStep3Title: 'Simpan Berkas',
+    howToStep3Desc: 'Pilih format yang diinginkan — video HD, foto, atau audio MP3 — lalu berkas akan langsung tersimpan ke perangkat Anda.',
+
+    // Features
+    featuresTitle: 'Fitur Utama Tempelink',
+    featNoWatermark: 'Tanpa Watermark',
+    featNoWatermarkDesc: 'Unduh video dan foto tanpa watermark atau logo platform yang mengganggu tampilan.',
+    featAllDevices: 'Semua Perangkat',
+    featAllDevicesDesc: 'Berfungsi di semua perangkat: ponsel, tablet, maupun komputer — tanpa instalasi aplikasi.',
+    featNoLogin: 'Tanpa Registrasi',
+    featNoLoginDesc: 'Gunakan langsung tanpa perlu mendaftar atau masuk ke akun mana pun.',
+    featOrigQuality: 'Kualitas Asli',
+    featOrigQualityDesc: 'Unduh konten dengan resolusi dan kualitas asli langsung dari sumbernya, tanpa kompresi ulang.',
+    featMultiPlatform: 'Multi-Platform',
+    featMultiPlatformDesc: 'Mendukung TikTok, Instagram, YouTube, X/Twitter, Facebook, dan Pinterest dalam satu alat.',
+    featAudioMp3: 'Ekstraksi Audio MP3',
+    featAudioMp3Desc: 'Ekstrak audio dari video dalam format MP3 untuk didengarkan secara offline kapan saja.',
+
+    // FAQ
+    faqTitle: 'Pertanyaan yang Sering Diajukan',
+    faqQ1: 'Apakah Tempelink gratis digunakan?',
+    faqA1: 'Ya, Tempelink dapat digunakan sepenuhnya tanpa biaya. Tidak ada biaya langganan, biaya per unduhan, maupun biaya tersembunyi.',
+    faqQ2: 'Platform apa saja yang didukung?',
+    faqA2: 'Tempelink mendukung TikTok, Instagram (Reels, foto, cerita), YouTube, X/Twitter, Facebook, dan Pinterest.',
+    faqQ3: 'Apakah perlu mendaftar akun untuk menggunakan Tempelink?',
+    faqA3: 'Tidak. Tempelink dapat digunakan langsung tanpa registrasi, login, atau pemberian data pribadi apa pun.',
+    faqQ4: 'Apakah hasil unduhan bebas watermark?',
+    faqA4: 'Tempelink mengunduh konten langsung dari sumber aslinya. Jika platform tidak menyematkan watermark pada sumber asli, hasil unduhan juga bebas watermark.',
+    faqQ5: 'Format apa saja yang tersedia untuk diunduh?',
+    faqA5: 'Format yang tersedia tergantung pada platform dan jenis konten: video MP4 (berbagai resolusi), foto JPG/PNG, dan audio MP3.',
+    faqQ6: 'Apakah Tempelink aman digunakan?',
+    faqA6: 'Ya. Tempelink tidak menyimpan data pribadi Anda, tidak meminta izin perangkat, dan seluruh proses unduhan dilakukan secara langsung dan transparan.',
+    faqQ7: 'Mengapa unduhan saya gagal atau tidak tersedia?',
+    faqA7: 'Beberapa konten bersifat privat atau dibatasi oleh platform sehingga tidak dapat diunduh. Pastikan konten yang dituju bersifat publik dan tautannya valid.',
+    faqQ8: 'Apakah ada batasan jumlah unduhan per hari?',
+    faqA8: 'Tidak ada batasan resmi. Namun untuk menjaga kestabilan layanan, penggunaan yang wajar dan tidak berlebihan sangat dianjurkan.',
+
     // Footer
     footerCopyright: '© 2026 Tempelink. Hak cipta dilindungi undang-undang.',
-    footerTagline: 'Utilitas Pengunduh Media Universal • Bersih, Cepat, dan Aman',
+    footerTagline: 'Utilitas Pengunduh Media Universal • Bersih, Cepat, dan Transparan',
+    footerMadeBy: 'Dibuat oleh',
   },
   en: {
     // Navigation
@@ -311,8 +391,52 @@ export const translations: Record<Language, Translations> = {
     downloadFailed: 'Failed to download the media file directly to your device.',
     batchCreateFailed: 'Failed to initialize the batch processing queue.',
 
+    // How To Use
+    howToTitle: 'How to Download Videos, Photos & MP3 Music',
+    howToStep1Title: 'Copy the Link',
+    howToStep1Desc: 'Open your platform of choice (TikTok, Instagram, YouTube, etc.), find the content you want, and copy its link.',
+    howToStep2Title: 'Paste the Link',
+    howToStep2Desc: 'Paste the copied link into the input field at the top of this page, then click the Download button.',
+    howToStep3Title: 'Save the File',
+    howToStep3Desc: 'Choose your preferred format — HD video, photo, or MP3 audio — and the file will be saved directly to your device.',
+
+    // Features
+    featuresTitle: 'Key Features of Tempelink',
+    featNoWatermark: 'No Watermark',
+    featNoWatermarkDesc: 'Download videos and photos without platform watermarks or logos interfering with the content.',
+    featAllDevices: 'All Devices',
+    featAllDevicesDesc: 'Works on all devices — smartphones, tablets, and computers — with no app installation required.',
+    featNoLogin: 'No Registration',
+    featNoLoginDesc: 'Use the tool immediately without signing up for an account or providing any personal information.',
+    featOrigQuality: 'Native Quality',
+    featOrigQualityDesc: 'Download content at its original resolution and quality directly from the source, without re-compression.',
+    featMultiPlatform: 'Multi-Platform',
+    featMultiPlatformDesc: 'Supports TikTok, Instagram, YouTube, X/Twitter, Facebook, and Pinterest — all in one tool.',
+    featAudioMp3: 'MP3 Audio Extraction',
+    featAudioMp3Desc: 'Extract audio from videos in MP3 format for offline listening anytime, anywhere.',
+
+    // FAQ
+    faqTitle: 'Frequently Asked Questions',
+    faqQ1: 'Is Tempelink free to use?',
+    faqA1: 'Yes, Tempelink is completely free. There are no subscription fees, per-download charges, or hidden costs.',
+    faqQ2: 'Which platforms are supported?',
+    faqA2: 'Tempelink supports TikTok, Instagram (Reels, photos, stories), YouTube, X/Twitter, Facebook, and Pinterest.',
+    faqQ3: 'Do I need to create an account?',
+    faqA3: 'No. Tempelink works immediately without any registration, login, or submission of personal data.',
+    faqQ4: 'Will the downloaded content be watermark-free?',
+    faqA4: 'Tempelink downloads content directly from its original source. If the platform does not embed a watermark on the original file, the download will be watermark-free.',
+    faqQ5: 'What file formats are available?',
+    faqA5: 'Available formats depend on the platform and content type: MP4 video (various resolutions), JPG/PNG photo, and MP3 audio.',
+    faqQ6: 'Is Tempelink safe to use?',
+    faqA6: 'Yes. Tempelink does not store your personal data, does not request device permissions, and all downloads are processed directly and transparently.',
+    faqQ7: 'Why did my download fail or show no options?',
+    faqA7: 'Some content is private or restricted by the platform and cannot be downloaded. Ensure the content is public and the link is valid.',
+    faqQ8: 'Is there a daily download limit?',
+    faqA8: 'There is no official limit. However, reasonable and non-excessive usage is strongly encouraged to maintain service stability for all users.',
+
     // Footer
     footerCopyright: '© 2026 Tempelink. All rights reserved.',
-    footerTagline: 'Universal Media Utility • Clean, Fast, and Secure',
+    footerTagline: 'Universal Media Utility • Clean, Fast, and Transparent',
+    footerMadeBy: 'Built by',
   },
 };
