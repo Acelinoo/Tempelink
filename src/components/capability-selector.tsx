@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Capability } from '@/lib/types/capability';
-import { Download, Sparkles, Music, Image as ImageIcon, Video, Loader2, Check, RotateCcw } from 'lucide-react';
+import { Download, Music, Image as ImageIcon, Video, Loader2, Check, RotateCcw } from 'lucide-react';
 import { useApp } from '@/lib/context/app-context';
 
 export type CapabilityDownloadState = 'idle' | 'downloading' | 'success' | 'error';
@@ -36,10 +36,9 @@ export const CapabilitySelector: React.FC<CapabilitySelectorProps> = ({
     return `${mb.toFixed(1)} MB`;
   };
 
-  const getCapabilityIcon = (type: string, qualityCategory: string) => {
+  const getCapabilityIcon = (type: string) => {
     if (type === 'audio') return Music;
     if (type === 'image') return ImageIcon;
-    if (qualityCategory === 'hd') return Sparkles;
     return Video;
   };
 
@@ -58,7 +57,7 @@ export const CapabilitySelector: React.FC<CapabilitySelectorProps> = ({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
         {capabilities.map((cap) => {
-          const Icon = getCapabilityIcon(cap.type, cap.qualityCategory);
+          const Icon = getCapabilityIcon(cap.type);
           const isSelected = selectedCapabilityId === cap.id;
           const isHD = cap.qualityCategory === 'hd';
           const sizeStr = formatFileSize(cap.fileSizeBytes);

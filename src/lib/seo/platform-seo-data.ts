@@ -56,7 +56,7 @@ export const PLATFORM_SEO_REGISTRY: Record<string, PlatformSeoConfig> = {
     platformId: 'tiktok',
     name: 'TikTok',
     badge: 'Tanpa Watermark & Audio Asli',
-    title: 'TikTok Downloader — Unduh Video TikTok Tanpa Watermark | Tempelink',
+    title: 'TikTok Downloader — Unduh Video TikTok Tanpa Watermark',
     description:
       'Unduh video TikTok tanpa watermark, audio MP3 asli, dan foto carousel dengan resolusi terverifikasi. Cepat, aman, dan tanpa iklan jebakan.',
     keywords: [
@@ -149,7 +149,7 @@ export const PLATFORM_SEO_REGISTRY: Record<string, PlatformSeoConfig> = {
     platformId: 'instagram',
     name: 'Instagram',
     badge: 'Reels, Video & Foto Publik',
-    title: 'Instagram Downloader — Unduh Reels, Video & Foto | Tempelink',
+    title: 'Instagram Downloader — Unduh Reels, Video & Foto',
     description:
       'Unduh Instagram Reels, video postingan, dan foto carousel berkualitas tinggi. Cepat, aman, tanpa registrasi, dan tanpa iklan jebakan.',
     keywords: [
@@ -223,7 +223,7 @@ export const PLATFORM_SEO_REGISTRY: Record<string, PlatformSeoConfig> = {
     platformId: 'youtube',
     name: 'YouTube',
     badge: 'Shorts, Video MP4 & Audio M4A',
-    title: 'YouTube Downloader — Unduh Video & Shorts YouTube | Tempelink',
+    title: 'YouTube Downloader — Unduh Video & Shorts YouTube',
     description:
       'Unduh YouTube Shorts dan video publik dalam format MP4 serta ekstraksi audio M4A asli. Bebas iklan popup dan malware.',
     keywords: [
@@ -297,7 +297,7 @@ export const PLATFORM_SEO_REGISTRY: Record<string, PlatformSeoConfig> = {
     platformId: 'x',
     name: 'X (Twitter)',
     badge: 'Video MP4 & Klip Publik',
-    title: 'X / Twitter Video Downloader — Unduh Video X | Tempelink',
+    title: 'X / Twitter Video Downloader — Unduh Video X',
     description:
       'Unduh video dan klip dari X (Twitter) langsung dalam format MP4 berkualitas jernih. Cepat, aman, dan tanpa iklan mengganggu.',
     keywords: [
@@ -363,7 +363,7 @@ export const PLATFORM_SEO_REGISTRY: Record<string, PlatformSeoConfig> = {
     platformId: 'facebook',
     name: 'Facebook',
     badge: 'Reels, Video HD & SD',
-    title: 'Facebook Video Downloader — Unduh Reels & Video FB | Tempelink',
+    title: 'Facebook Video Downloader — Unduh Reels & Video FB',
     description:
       'Unduh video Facebook publik dan Facebook Reels dalam kualitas HD atau SD. Bersih, cepat, tanpa registrasi, dan aman.',
     keywords: [
@@ -435,7 +435,7 @@ export const PLATFORM_SEO_REGISTRY: Record<string, PlatformSeoConfig> = {
     platformId: 'pinterest',
     name: 'Pinterest',
     badge: 'Pin Foto & Media Visual',
-    title: 'Pinterest Media Downloader — Unduh Pin & Gambar | Tempelink',
+    title: 'Pinterest Media Downloader — Unduh Pin & Gambar',
     description:
       'Informasi utilitas pengunduhan Pin gambar dan media Pinterest publik. Transparan mengenai ketersediaan dan status penyedia.',
     keywords: [

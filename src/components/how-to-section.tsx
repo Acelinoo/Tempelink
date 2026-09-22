@@ -36,10 +36,10 @@ export const HowToSection: React.FC = () => {
             >
               {/* Step number badge */}
               <div className="relative mb-2.5 sm:mb-4">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-app-surface border-2 border-app flex items-center justify-center shadow-sm">
-                  <Icon className="w-5 h-5 sm:w-7 sm:h-7 text-app-cta" />
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-app-surface border border-app flex items-center justify-center shadow-sm">
+                  <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-app-cta" />
                 </div>
-                <span className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-app-cta text-[var(--accent-cta-text)] text-[10px] sm:text-xs font-black flex items-center justify-center shadow-sm">
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-md bg-app-cta text-[var(--accent-cta-text)] text-[10px] sm:text-xs font-black flex items-center justify-center shadow-sm">
                   {idx + 1}
                 </span>
               </div>

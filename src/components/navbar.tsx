@@ -105,7 +105,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenHistory, historyCount }) =
             <History className="w-4 h-4 text-app-cta" />
             <span className="hidden sm:inline">{t('historyButton')}</span>
             {historyCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-xs font-bold bg-app-cta text-[var(--accent-cta-text)]">
+              <span className="px-1.5 py-0.5 rounded-md text-xs font-bold bg-app-cta text-[var(--accent-cta-text)]">
                 {historyCount}
               </span>
             )}

@@ -6,7 +6,7 @@ import { getBaseUrl } from '@/lib/seo/platform-seo-data';
 const baseUrl = getBaseUrl();
 
 export const metadata: Metadata = {
-  title: 'Ketentuan Layanan — Tempelink',
+  title: 'Ketentuan Layanan',
   description:
     'Ketentuan layanan Tempelink mengatur penggunaan yang diizinkan, larangan, batasan tanggung jawab, dan kebijakan platform.',
   alternates: { canonical: `${baseUrl}/terms` },

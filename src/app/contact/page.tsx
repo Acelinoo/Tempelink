@@ -6,7 +6,7 @@ import { getBaseUrl } from '@/lib/seo/platform-seo-data';
 const baseUrl = getBaseUrl();
 
 export const metadata: Metadata = {
-  title: 'Kontak — Tempelink',
+  title: 'Kontak',
   description:
     'Hubungi tim Tempelink untuk pertanyaan, laporan masalah teknis, atau keperluan lainnya.',
   alternates: { canonical: `${baseUrl}/contact` },

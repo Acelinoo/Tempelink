@@ -6,7 +6,7 @@ import { getBaseUrl } from '@/lib/seo/platform-seo-data';
 const baseUrl = getBaseUrl();
 
 export const metadata: Metadata = {
-  title: 'Kebijakan Privasi — Tempelink',
+  title: 'Kebijakan Privasi',
   description:
     'Kebijakan privasi Tempelink menjelaskan data apa yang diproses, bagaimana data digunakan, hak pengguna, dan cara menghubungi kami terkait privasi.',
   alternates: { canonical: `${baseUrl}/privacy` },

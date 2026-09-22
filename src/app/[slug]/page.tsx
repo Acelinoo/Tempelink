@@ -10,37 +10,13 @@ import {
 } from '@/lib/seo/platform-seo-data';
 import { FaqJsonLd, WebAppJsonLd, BreadcrumbJsonLd } from '@/components/seo-structured-data';
 import {
-  Video,
-  Film,
-  PlaySquare,
-  Share2,
-  Pin,
   ArrowRight,
   ChevronRight,
-  Info,
-  HelpCircle,
-  Layers,
-  Sparkles,
 } from 'lucide-react';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
-
-const XLogo: React.FC<{ className?: string }> = ({ className }) => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className={className || 'w-4 h-4'} fill="currentColor">
-    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 24.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-  </svg>
-);
-
-const PLATFORM_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  tiktok: Video,
-  instagram: Film,
-  youtube: PlaySquare,
-  x: XLogo,
-  facebook: Share2,
-  pinterest: Pin,
-};
 
 const PLATFORM_COLORS: Record<string, { badge: string; text: string; bg: string }> = {
   tiktok:    { badge: 'text-pink-400 bg-pink-950/40 border-pink-800/40',   text: 'text-pink-400',   bg: 'from-pink-500/10 to-transparent' },
@@ -97,7 +73,6 @@ export default async function PlatformLandingPage({ params }: PageProps) {
 
   const baseUrl = getBaseUrl();
   const canonicalUrl = `${baseUrl}/${config.slug}`;
-  const Icon = PLATFORM_ICONS[config.platformId] || Video;
   const colorTheme = PLATFORM_COLORS[config.platformId] || {
     badge: 'text-app-cta bg-app-elevated border-app',
     text: 'text-app-cta',
@@ -145,9 +120,8 @@ export default async function PlatformLandingPage({ params }: PageProps) {
         {/* Hero */}
         <section className={`relative rounded-2xl p-6 sm:p-10 border border-app bg-gradient-to-b ${colorTheme.bg} bg-app-surface overflow-hidden`}>
           <div className="max-w-2xl space-y-4">
-            <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full border text-xs font-medium ${colorTheme.badge}`}>
-              <Icon className={`w-3.5 h-3.5 ${colorTheme.text}`} />
-              <span className={colorTheme.text}>{config.badge}</span>
+            <div className={`inline-block px-3 py-1 rounded-md border text-xs font-bold uppercase tracking-wider ${colorTheme.badge}`}>
+              <span>{config.badge}</span>
             </div>
             <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-app-main leading-tight">
               {config.h1}
@@ -156,9 +130,8 @@ export default async function PlatformLandingPage({ params }: PageProps) {
             <div className="pt-4 flex flex-wrap items-center gap-3">
               <Link
                 href="/"
-                className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-app-cta text-[var(--accent-cta-text)] text-xs sm:text-sm font-bold shadow-md hover:opacity-90 transition-all"
+                className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-app-cta text-[var(--accent-cta-text)] text-xs sm:text-sm font-bold shadow-md hover:opacity-90 transition-all"
               >
-                <Sparkles className="w-4 h-4" />
                 <span>Mulai Unduh Sekarang</span>
               </Link>
               <a
@@ -185,7 +158,7 @@ export default async function PlatformLandingPage({ params }: PageProps) {
             <h2 className="text-lg sm:text-2xl font-bold text-app-main tracking-tight">
               Format &amp; Resolusi yang Didukung
             </h2>
-            <span className="text-[11px] font-mono text-app-cta bg-app-elevated px-2 py-0.5 rounded border border-app font-bold">
+            <span className="text-[11px] font-mono text-app-cta bg-app-elevated px-2 py-0.5 rounded-md border border-app font-bold">
               Verifikasi Otomatis
             </span>
           </div>
@@ -194,7 +167,7 @@ export default async function PlatformLandingPage({ params }: PageProps) {
               <div key={idx} className="p-3 sm:p-4 rounded-xl bg-app-surface border border-app space-y-1.5 sm:space-y-2 hover:border-[var(--border-focus)] transition-colors shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                   <span className="text-xs sm:text-sm font-bold text-app-main leading-tight">{fmt.label}</span>
-                  <span className="self-start sm:self-auto text-[9px] sm:text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-app-elevated text-app-cta border border-app font-bold">{fmt.quality}</span>
+                  <span className="self-start sm:self-auto text-[9px] sm:text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-md bg-app-elevated text-app-cta border border-app font-bold">{fmt.quality}</span>
                 </div>
                 <p className="text-[11px] sm:text-xs text-app-muted leading-relaxed">{fmt.description}</p>
               </div>
@@ -239,7 +212,6 @@ export default async function PlatformLandingPage({ params }: PageProps) {
         {/* Limitations */}
         <section className="p-5 rounded-xl bg-app-surface border border-app space-y-3">
           <div className="flex items-center space-x-2">
-            <Info className="w-4 h-4 text-app-cta shrink-0" />
             <h2 className="text-xs sm:text-sm font-bold text-app-main">Batasan Teknis &amp; Transparansi Layanan</h2>
           </div>
           <ul className="space-y-2 text-xs text-app-muted list-disc list-inside">
@@ -252,7 +224,6 @@ export default async function PlatformLandingPage({ params }: PageProps) {
         {/* FAQ */}
         <section className="space-y-5">
           <div className="flex items-center space-x-2">
-            <HelpCircle className="w-5 h-5 text-app-cta" />
             <h2 className="text-lg sm:text-2xl font-bold text-app-main tracking-tight">
               Pertanyaan yang Sering Diajukan (FAQ)
             </h2>
@@ -270,21 +241,21 @@ export default async function PlatformLandingPage({ params }: PageProps) {
         {/* Cross-linking */}
         <section className="border-t border-app pt-10 space-y-5">
           <div className="flex items-center space-x-2">
-            <Layers className="w-4 h-4 text-app-cta" />
             <h2 className="text-base sm:text-xl font-bold text-app-main tracking-tight">Pengunduh Platform Lainnya</h2>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
             {otherPlatforms.map((op) => {
-              const OpIcon = PLATFORM_ICONS[op.platformId] || Video;
               return (
                 <Link
                   key={op.slug}
                   href={`/${op.slug}`}
-                  className="p-3 rounded-xl bg-app-surface border border-app hover:border-[var(--border-focus)] hover:bg-app-elevated transition-all flex flex-col items-center justify-center text-center space-y-2 group"
+                  className="p-3 rounded-xl bg-app-surface border border-app hover:border-[var(--border-focus)] hover:bg-app-elevated transition-all flex flex-col items-center justify-center text-center space-y-1 group"
                 >
-                  <OpIcon className="w-4 h-4 text-app-subtle group-hover:text-app-cta transition-colors" />
                   <span className="text-xs font-semibold text-app-muted group-hover:text-app-main transition-colors">
                     {op.name}
+                  </span>
+                  <span className="text-[10px] text-app-subtle">
+                    Downloader
                   </span>
                 </Link>
               );

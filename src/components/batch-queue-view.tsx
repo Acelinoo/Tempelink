@@ -184,14 +184,14 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
     switch (status) {
       case 'PENDING':
         return (
-          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-app-surface text-app-subtle text-xs font-semibold border border-app">
+          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md bg-app-surface text-app-subtle text-xs font-semibold border border-app">
             <Clock className="w-3 h-3" />
             <span>{t('batchStatusPending')}</span>
           </span>
         );
       case 'RESOLVING':
         return (
-          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-app-elevated text-app-cta text-xs font-semibold border border-app animate-pulse">
+          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md bg-app-elevated text-app-cta text-xs font-semibold border border-app animate-pulse">
             <Loader2 className="w-3 h-3 animate-spin" />
             <span>{t('batchStatusProcessing')}</span>
           </span>
@@ -199,28 +199,28 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
       case 'READY':
       case 'COMPLETED':
         return (
-          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-emerald-950/40 text-emerald-400 text-xs font-semibold border border-emerald-800/40">
+          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md bg-emerald-950/40 text-emerald-400 text-xs font-semibold border border-emerald-800/40">
             <CheckCircle2 className="w-3 h-3 text-emerald-400" />
             <span>{t('batchStatusCompleted')}</span>
           </span>
         );
       case 'DOWNLOADING':
         return (
-          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-app-elevated text-app-cta text-xs font-semibold border border-app">
+          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md bg-app-elevated text-app-cta text-xs font-semibold border border-app">
             <Loader2 className="w-3 h-3 animate-spin" />
             <span>{t('btnDownloading')}</span>
           </span>
         );
       case 'FAILED':
         return (
-          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-rose-950/40 text-rose-400 text-xs font-semibold border border-rose-800/40">
+          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md bg-rose-950/40 text-rose-400 text-xs font-semibold border border-rose-800/40">
             <AlertCircle className="w-3 h-3 text-rose-400" />
             <span>{t('batchStatusFailed')}</span>
           </span>
         );
       case 'CANCELLED':
         return (
-          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-app-surface text-app-subtle text-xs font-semibold border border-app">
+          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md bg-app-surface text-app-subtle text-xs font-semibold border border-app">
             <XCircle className="w-3 h-3" />
             <span>Dibatalkan</span>
           </span>

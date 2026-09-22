@@ -206,7 +206,7 @@ export const BatchInputForm: React.FC<BatchInputFormProps> = ({
           {/* Analysis Pills */}
           <div className="flex flex-wrap items-center gap-2">
             <span
-              className={`px-2.5 py-0.5 rounded-full font-bold ${
+              className={`px-2.5 py-0.5 rounded-md font-bold ${
                 analysis.isOverLimit
                   ? 'bg-rose-950/60 border border-rose-700 text-rose-300'
                   : analysis.uniqueCount > 0
@@ -218,7 +218,7 @@ export const BatchInputForm: React.FC<BatchInputFormProps> = ({
             </span>
 
             {analysis.duplicateCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-amber-950/60 border border-amber-700 text-amber-300 font-medium">
+              <span className="px-2 py-0.5 rounded-md bg-amber-950/60 border border-amber-700 text-amber-300 font-medium">
                 {analysis.duplicateCount} {t('batchDuplicateCount')}
               </span>
             )}
