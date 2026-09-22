@@ -336,5 +336,82 @@ describe('YouTubeProvider — Resolution Engine & Capabilities', () => {
 
       serverConfig.youtube.apiKey = originalKey;
     });
+
+    it('resolves youtube-quick-video-downloader format with 4K (2160p) and 2K (1440p) streams', async () => {
+      const originalKey = serverConfig.youtube.apiKey;
+      serverConfig.youtube.apiKey = 'test_key';
+
+      const mockQuickPayload = [
+        {
+          resourceId: 'a9LDPn-MO4I',
+          urls: [
+            {
+              url: 'https://rr3---sn-test.googlevideo.com/videoplayback?itag=313',
+              name: 'MP4',
+              subName: '2160',
+              extension: 'mp4',
+              quality: '2160',
+              audio: false,
+              filesize: 1147585264,
+            },
+            {
+              url: 'https://rr3---sn-test.googlevideo.com/videoplayback?itag=271',
+              name: 'MP4',
+              subName: '1440',
+              extension: 'mp4',
+              quality: '1440',
+              audio: false,
+              filesize: 515340905,
+            },
+            {
+              url: 'https://rr3---sn-test.googlevideo.com/videoplayback?itag=140',
+              name: 'Audio M4A',
+              subName: '140',
+              extension: 'm4a',
+              quality: '140',
+              audio: true,
+              filesize: 30927136,
+            },
+          ],
+          meta: {
+            title: 'UHDTV TEST 8K VIDEO.mp4',
+            duration: '01:00',
+          },
+          pictureUrl: 'https://i.ytimg.com/vi/a9LDPn-MO4I/hqdefault.jpg',
+        },
+      ];
+
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockQuickPayload,
+      } as unknown as Response);
+
+      const url = new URL('https://www.youtube.com/watch?v=a9LDPn-MO4I');
+      const res = await provider.resolve(url);
+
+      expect(res.mediaId).toBe('a9LDPn-MO4I');
+      expect(res.title).toBe('UHDTV TEST 8K VIDEO.mp4');
+      expect(res.durationSeconds).toBe(60);
+
+      // Verify 4K (2160p) capability
+      const cap4k = res.capabilities.find((c) => c.resolution === '2160');
+      expect(cap4k).toBeDefined();
+      expect(cap4k?.label).toContain('2160');
+      expect(cap4k?.fileSizeBytes).toBe(1147585264);
+
+      // Verify 2K (1440p) capability
+      const cap2k = res.capabilities.find((c) => c.resolution === '1440');
+      expect(cap2k).toBeDefined();
+      expect(cap2k?.label).toContain('1440');
+      expect(cap2k?.fileSizeBytes).toBe(515340905);
+
+      // Verify audio capability
+      const audioCap = res.capabilities.find((c) => c.type === 'audio');
+      expect(audioCap).toBeDefined();
+      expect(audioCap?.format).toBe('m4a');
+
+      serverConfig.youtube.apiKey = originalKey;
+    });
   });
 });

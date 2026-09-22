@@ -162,6 +162,10 @@ export class YouTubeProvider extends BasePlatformProvider {
       return this.resolveWithMp4Mp3Downloader(detection, apiKey, canonicalUrl, correlationId);
     }
 
+    const isQuickVideoDownloader =
+      serverConfig.youtube.apiHost.includes('youtube-quick-video-downloader') ||
+      serverConfig.youtube.baseUrl.includes('youtube-quick-video-downloader');
+
     const isVideoAudioDownloader =
       serverConfig.youtube.apiHost.includes('youtube-video-audio-downloader') ||
       serverConfig.youtube.baseUrl.includes('youtube-video-audio-downloader');
@@ -171,7 +175,9 @@ export class YouTubeProvider extends BasePlatformProvider {
       serverConfig.youtube.baseUrl.includes('youtube-media-downloader');
 
     let endpointPath = `/download.php?id=${encodeURIComponent(detection.mediaId)}`;
-    if (isVideoAudioDownloader) {
+    if (isQuickVideoDownloader) {
+      endpointPath = '/api/youtube/links';
+    } else if (isVideoAudioDownloader) {
       endpointPath = `/api/v1/youtube-media/info?url=${encodeURIComponent(canonicalUrl)}`;
     } else if (isMediaDownloader) {
       endpointPath = `/v2/video/details?videoId=${encodeURIComponent(detection.mediaId)}`;
@@ -190,13 +196,21 @@ export class YouTubeProvider extends BasePlatformProvider {
     while (attempt <= maxRetries) {
       attempt++;
       try {
+        const headers: Record<string, string> = {
+          'X-RapidAPI-Key': apiKey,
+          'X-RapidAPI-Host': serverConfig.youtube.apiHost,
+          Accept: 'application/json',
+        };
+        if (isQuickVideoDownloader) {
+          headers['Content-Type'] = 'application/json';
+        }
+
         response = await fetch(endpointUrl, {
-          method: 'GET',
-          headers: {
-            'X-RapidAPI-Key': apiKey,
-            'X-RapidAPI-Host': serverConfig.youtube.apiHost,
-            Accept: 'application/json',
-          },
+          method: isQuickVideoDownloader ? 'POST' : 'GET',
+          headers,
+          body: isQuickVideoDownloader
+            ? JSON.stringify({ url: canonicalUrl })
+            : undefined,
           signal: AbortSignal.timeout(serverConfig.youtube.resolveTimeoutMs),
         });
 
@@ -300,9 +314,10 @@ export class YouTubeProvider extends BasePlatformProvider {
     sourceUrl: string
   ): MediaResolution {
     if (
-      payload.status === 'error' ||
-      payload.status_code === 404 ||
-      (typeof payload.errorId === 'string' && payload.errorId !== 'Success')
+      !Array.isArray(payload) &&
+      (payload.status === 'error' ||
+        payload.status_code === 404 ||
+        (typeof payload.errorId === 'string' && payload.errorId !== 'Success'))
     ) {
       throw new TempelinkError(
         'CONTENT_UNAVAILABLE',
@@ -313,6 +328,39 @@ export class YouTubeProvider extends BasePlatformProvider {
     }
 
     const rawFormats: YouTubeFormatItem[] = [];
+
+    // Format: youtube-quick-video-downloader (array of items [ { urls: [...], meta: { title, duration }, pictureUrl } ])
+    const firstQuickObj =
+      Array.isArray(payload) && payload[0] && typeof payload[0] === 'object'
+        ? (payload[0] as Record<string, unknown>)
+        : null;
+
+    if (firstQuickObj && Array.isArray(firstQuickObj.urls)) {
+      for (const item of firstQuickObj.urls) {
+        if (item && typeof item === 'object') {
+          const rawItem = item as Record<string, unknown>;
+          const linkUrl = typeof rawItem.url === 'string' ? rawItem.url : '';
+          // Ignore relative converter links that 404
+          if (linkUrl.startsWith('https://')) {
+            const isAudio = Boolean(rawItem.audio);
+            const quality = String(rawItem.quality || rawItem.subName || '720');
+            const format = (rawItem.extension as string) || (isAudio ? 'm4a' : 'mp4');
+            rawFormats.push({
+              url: linkUrl,
+              quality: isAudio ? 'audio' : quality,
+              format,
+              hasAudio: isAudio,
+              fileSizeBytes:
+                typeof rawItem.filesize === 'number'
+                  ? rawItem.filesize
+                  : typeof rawItem.contentLength === 'number'
+                  ? rawItem.contentLength
+                  : null,
+            });
+          }
+        }
+      }
+    }
 
     // Format: youtube-media-downloader v2 ({ videos: { items: [...] }, audios: { items: [...] } })
     if (
@@ -463,12 +511,21 @@ export class YouTubeProvider extends BasePlatformProvider {
       );
     }
 
+    const quickMeta =
+      firstQuickObj?.meta && typeof firstQuickObj.meta === 'object'
+        ? (firstQuickObj.meta as Record<string, unknown>)
+        : null;
+
     const title =
       (payload.title as string) ||
+      (quickMeta && typeof quickMeta.title === 'string' ? quickMeta.title : '') ||
       (dataObj && typeof dataObj.title === 'string' ? dataObj.title : '') ||
       `YouTube Video (${mediaId})`;
     let thumbnail =
       (payload.thumbnail as string) ||
+      (firstQuickObj && typeof firstQuickObj.pictureUrl === 'string'
+        ? firstQuickObj.pictureUrl
+        : '') ||
       (dataObj && typeof dataObj.thumbnail === 'string' ? dataObj.thumbnail : '') ||
       '';
     if (!thumbnail && Array.isArray(payload.thumbnails) && payload.thumbnails.length > 0) {
@@ -481,6 +538,7 @@ export class YouTubeProvider extends BasePlatformProvider {
     const durationSeconds =
       parseDurationString(payload.lengthSeconds) ??
       parseDurationString(payload.duration) ??
+      (quickMeta ? parseDurationString(quickMeta.duration) : null) ??
       (dataObj ? parseDurationString(dataObj.duration) : null);
 
     const capabilities = [];
