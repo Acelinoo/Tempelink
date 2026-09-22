@@ -205,16 +205,21 @@ export async function GET(req: NextRequest) {
     }
 
     // Stream media directly with attachment disposition to force immediate file download
+    let upstreamStatus = 0;
     try {
       const upstreamRes = await fetch(payload.targetUrl, {
         method: 'GET',
         headers: {
           'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Referer': 'https://www.youtube.com/',
+          'Origin': 'https://www.youtube.com',
           Accept: '*/*',
         },
         signal: AbortSignal.timeout(30000),
       });
+
+      upstreamStatus = upstreamRes.status;
 
       if (upstreamRes.ok && upstreamRes.body) {
         const streamHeaders = new Headers();
@@ -252,20 +257,35 @@ export async function GET(req: NextRequest) {
           headers: streamHeaders,
         });
       }
+
+      Logger.warn('[Download] Upstream returned non-OK status', {
+        status: upstreamRes.status,
+        correlationId,
+      });
     } catch (streamErr) {
-      Logger.warn('[Download] Direct streaming failed, falling back to redirect', {
+      Logger.warn('[Download] Upstream fetch failed', {
         error: streamErr instanceof Error ? streamErr.message : String(streamErr),
         correlationId,
       });
     }
 
-    // Fallback: Safely redirect to authorized media resource
-    return NextResponse.redirect(payload.targetUrl, {
-      status: 302,
+    // Streaming failed — never redirect browser to upstream URL.
+    // YouTube CDN URLs (googlevideo.com) are signed for the API server's IP;
+    // redirecting exposes the IP-bound URL directly to the browser which always 403s.
+    const streamError = new TempelinkError(
+      upstreamStatus === 403
+        ? 'PRIVATE_CONTENT'
+        : 'DOWNLOAD_UNAVAILABLE',
+      upstreamStatus === 403
+        ? 'Tautan unduhan tidak dapat diakses. URL media sudah kedaluwarsa atau dibatasi — silakan periksa kembali tautan lalu unduh ulang.'
+        : 'Gagal mengunduh media dari sumber. Silakan coba beberapa saat lagi.'
+    );
+    return NextResponse.json(streamError.toJSON(correlationId), {
+      status: 503,
       headers: {
         'X-Correlation-ID': correlationId,
-        'Content-Disposition': formatContentDisposition(payload.filename),
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   } catch (err: unknown) {

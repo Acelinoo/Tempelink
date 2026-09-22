@@ -71,6 +71,8 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
   const [isCancelling, setIsCancelling] = useState(false);
   const [retryingJobId, setRetryingJobId] = useState<string | null>(null);
   const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [downloadErrorJobId, setDownloadErrorJobId] = useState<string | null>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   const isTerminal =
@@ -150,6 +152,8 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
   const handleDownloadItem = async (job: QueueJob) => {
     if (!job.selectedCapability) return;
     setDownloadingJobId(job.id);
+    setDownloadError(null);
+    setDownloadErrorJobId(null);
 
     try {
       const cap = job.selectedCapability;
@@ -163,8 +167,10 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
       if (onRecordHistory) {
         onRecordHistory(job);
       }
-    } catch {
-      // Handled inside helper
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unduhan gagal. Coba lagi.';
+      setDownloadError(msg);
+      setDownloadErrorJobId(job.id);
     } finally {
       setTimeout(() => setDownloadingJobId(null), 1500);
     }
@@ -409,19 +415,26 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
 
                   <div>
                     {isCompleted && job.selectedCapability && (
-                      <button
-                        type="button"
-                        onClick={() => handleDownloadItem(job)}
-                        disabled={downloadingJobId === job.id}
-                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-app-cta text-[var(--accent-cta-text)] hover:opacity-90 text-xs font-bold shadow-sm transition-all cursor-pointer"
-                      >
-                        {downloadingJobId === job.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <Download className="w-3.5 h-3.5" />
+                      <div className="flex flex-col items-end space-y-1">
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadItem(job)}
+                          disabled={downloadingJobId === job.id}
+                          className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-app-cta text-[var(--accent-cta-text)] hover:opacity-90 text-xs font-bold shadow-sm transition-all cursor-pointer"
+                        >
+                          {downloadingJobId === job.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Download className="w-3.5 h-3.5" />
+                          )}
+                          <span>{t('btnDownload')}</span>
+                        </button>
+                        {downloadErrorJobId === job.id && downloadError && (
+                          <p className="text-[10px] text-rose-500 font-medium text-right max-w-[180px] leading-tight">
+                            {downloadError}
+                          </p>
                         )}
-                        <span>{t('btnDownload')}</span>
-                      </button>
+                      </div>
                     )}
 
                     {isFailed && (
