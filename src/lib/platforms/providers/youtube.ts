@@ -136,11 +136,19 @@ export class YouTubeProvider extends BasePlatformProvider {
     }
 
     const canonicalUrl = `https://www.youtube.com/watch?v=${detection.mediaId}`;
-    const isNewDownloader =
+
+    if (
+      serverConfig.youtube.apiHost.includes('youtube-mp4-mp3-downloader') ||
+      serverConfig.youtube.baseUrl.includes('youtube-mp4-mp3-downloader')
+    ) {
+      return this.resolveWithMp4Mp3Downloader(detection, apiKey, canonicalUrl, correlationId);
+    }
+
+    const isMediaDownloader =
       serverConfig.youtube.apiHost.includes('youtube-media-downloader') ||
       serverConfig.youtube.baseUrl.includes('youtube-media-downloader');
 
-    const endpointPath = isNewDownloader
+    const endpointPath = isMediaDownloader
       ? `/v2/video/details?videoId=${encodeURIComponent(detection.mediaId)}`
       : `/download.php?id=${encodeURIComponent(detection.mediaId)}`;
 
@@ -500,6 +508,207 @@ export class YouTubeProvider extends BasePlatformProvider {
       mediaType: 'video',
       title,
       sourceUrl,
+      thumbnailUrl: thumbnail,
+      durationSeconds,
+      author: null,
+      capabilities,
+    };
+  }
+
+  /**
+   * Dedicated resolver for youtube-mp4-mp3-downloader.p.rapidapi.com gateway.
+   */
+  private async resolveWithMp4Mp3Downloader(
+    detection: DetectionResult,
+    apiKey: string,
+    canonicalUrl: string,
+    _correlationId?: string
+  ): Promise<MediaResolution> {
+    const videoId = detection.mediaId!;
+    const baseUrl = serverConfig.youtube.baseUrl;
+    const host = serverConfig.youtube.apiHost;
+
+    // 1. Initial download conversion request
+    const initUrl = new URL('/api/v1/download', baseUrl);
+    initUrl.searchParams.set('allowExtendedDuration', 'false');
+    initUrl.searchParams.set('addInfo', 'true');
+    initUrl.searchParams.set('audioQuality', '128');
+    initUrl.searchParams.set('format', '720');
+    initUrl.searchParams.set('id', videoId);
+
+    const initRes = await fetch(initUrl.toString(), {
+      method: 'GET',
+      headers: {
+        'X-RapidAPI-Key': apiKey,
+        'X-RapidAPI-Host': host,
+        Accept: 'application/json',
+      },
+      signal: AbortSignal.timeout(serverConfig.youtube.resolveTimeoutMs),
+    });
+
+    if (!initRes.ok) {
+      if (initRes.status === 404) {
+        throw new TempelinkError(
+          'CONTENT_UNAVAILABLE',
+          'Video YouTube tidak ditemukan, bersifat privat, atau telah dihapus.'
+        );
+      }
+      if (initRes.status === 429) {
+        throw new TempelinkError(
+          'RATE_LIMITED',
+          'Batas kuota gateway YouTube tercapai. Silakan coba beberapa saat lagi.'
+        );
+      }
+      throw new TempelinkError(
+        'PROVIDER_UNAVAILABLE',
+        `Penyedia YouTube merespons dengan kode kesalahan HTTP ${initRes.status}.`
+      );
+    }
+
+    const initData = (await initRes.json()) as Record<string, unknown>;
+
+    // If response directly contains formats or is from standard format mock
+    if (
+      initData.results ||
+      initData.videos ||
+      initData.formats ||
+      initData.status === 'ok' ||
+      initData.errorId
+    ) {
+      return this.normalizePayload(initData, videoId, canonicalUrl);
+    }
+
+    if (!initData.progressId) {
+      if (initData.status === 'error' || initData.status_code === 404) {
+        throw new TempelinkError(
+          'CONTENT_UNAVAILABLE',
+          (initData.message as string) ||
+            'Video YouTube tidak ditemukan, bersifat privat, atau telah dihapus.'
+        );
+      }
+      throw new TempelinkError(
+        'RESOLUTION_FAILED',
+        'Penyedia YouTube tidak mengembalikan ID pemrosesan antrean.'
+      );
+    }
+
+    const title =
+      typeof initData.title === 'string'
+        ? initData.title
+        : `YouTube Video (${videoId})`;
+    const addInfo = initData.additionalInfo as
+      | { thumbnail?: string; duration?: number }
+      | undefined;
+    const thumbnail =
+      addInfo && typeof addInfo.thumbnail === 'string'
+        ? addInfo.thumbnail
+        : `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+    const durationSeconds =
+      addInfo && typeof addInfo.duration === 'number'
+        ? addInfo.duration
+        : null;
+
+    // 2. Poll progress endpoint to get direct download URL
+    let downloadUrl: string | null = null;
+    const progressUrl = new URL('/api/v1/progress', baseUrl);
+    progressUrl.searchParams.set('id', String(initData.progressId));
+
+    for (let i = 0; i < 6; i++) {
+      try {
+        const progRes = await fetch(progressUrl.toString(), {
+          method: 'GET',
+          headers: {
+            'X-RapidAPI-Key': apiKey,
+            'X-RapidAPI-Host': host,
+            Accept: 'application/json',
+          },
+          signal: AbortSignal.timeout(5000),
+        });
+
+        if (progRes.ok) {
+          const progData = (await progRes.json()) as {
+            finished?: boolean;
+            downloadUrl?: string;
+            status?: string;
+          };
+
+          if (progData.finished && progData.downloadUrl) {
+            downloadUrl = progData.downloadUrl;
+            break;
+          }
+        }
+      } catch {
+        // Retry polling step
+      }
+
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+
+    if (!downloadUrl) {
+      throw new TempelinkError(
+        'TEMPORARY_FAILURE',
+        'Proses konversi berkas media YouTube masih berjalan atau membutuhkan waktu lebih lama. Silakan coba kembali.'
+      );
+    }
+
+    // SSRF verification
+    const parsedTarget = new URL(downloadUrl);
+    validateUrlSafety(parsedTarget);
+
+    const capabilities = [];
+
+    // Video HD 720p capability
+    const vidCapId = `yt_${videoId}_hd_720`;
+    const vidFilename = `youtube_${videoId}_hd_720p.mp4`;
+    const vidToken = generateDownloadToken({
+      mediaId: videoId,
+      capabilityId: vidCapId,
+      sourceUrl: canonicalUrl,
+      targetUrl: downloadUrl,
+      filename: vidFilename,
+      mimeType: 'video/mp4',
+    });
+
+    capabilities.push(
+      createVideoCapability({
+        id: vidCapId,
+        resolution: '720p',
+        format: 'mp4',
+        label: 'HD 720p (MP4)',
+        hasAudio: true,
+        downloadUrl,
+        downloadToken: vidToken,
+      })
+    );
+
+    // Audio MP3 capability
+    const audCapId = `yt_${videoId}_audio`;
+    const audFilename = `youtube_${videoId}_audio.mp3`;
+    const audToken = generateDownloadToken({
+      mediaId: videoId,
+      capabilityId: audCapId,
+      sourceUrl: canonicalUrl,
+      targetUrl: downloadUrl,
+      filename: audFilename,
+      mimeType: 'audio/mpeg',
+    });
+
+    capabilities.push(
+      createAudioCapability({
+        id: audCapId,
+        format: 'mp3',
+        label: 'Audio (MP3)',
+        downloadUrl,
+        downloadToken: audToken,
+      })
+    );
+
+    return {
+      mediaId: videoId,
+      platform: 'youtube',
+      mediaType: 'video',
+      title,
+      sourceUrl: canonicalUrl,
       thumbnailUrl: thumbnail,
       durationSeconds,
       author: null,

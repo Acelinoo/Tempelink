@@ -125,10 +125,10 @@ export const serverConfig = {
         return this._customApiHost;
       }
       const val = (process.env.YOUTUBE_PROVIDER_API_HOST || '').trim().replace(/^["']|["']$/g, '');
-      if (val && !val.includes('youtube-video-and-shorts-downloader')) {
+      if (val) {
         return val;
       }
-      return 'youtube-media-downloader.p.rapidapi.com';
+      return 'youtube-mp4-mp3-downloader.p.rapidapi.com';
     },
     set apiHost(val: string) {
       this._customApiHost = val;
@@ -139,10 +139,10 @@ export const serverConfig = {
         return this._customBaseUrl;
       }
       const val = (process.env.YOUTUBE_PROVIDER_BASE_URL || '').trim().replace(/^["']|["']$/g, '');
-      if (val && !val.includes('youtube-video-and-shorts-downloader')) {
+      if (val) {
         return val;
       }
-      return 'https://youtube-media-downloader.p.rapidapi.com';
+      return 'https://youtube-mp4-mp3-downloader.p.rapidapi.com';
     },
     set baseUrl(val: string) {
       this._customBaseUrl = val;
