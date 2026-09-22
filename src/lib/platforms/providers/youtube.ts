@@ -22,6 +22,24 @@ export interface YouTubeFormatItem {
   height?: number | null;
 }
 
+function parseDurationString(val: unknown): number | null {
+  if (typeof val === 'number') return isNaN(val) ? null : val;
+  if (typeof val === 'string') {
+    const trimmed = val.trim();
+    if (!trimmed) return null;
+    const parts = trimmed.split(':').map((p) => parseInt(p, 10));
+    if (parts.length === 3 && parts.every((n) => !isNaN(n))) {
+      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    }
+    if (parts.length === 2 && parts.every((n) => !isNaN(n))) {
+      return parts[0] * 60 + parts[1];
+    }
+    const num = parseInt(trimmed, 10);
+    return isNaN(num) ? null : num;
+  }
+  return null;
+}
+
 export class YouTubeProvider extends BasePlatformProvider {
   public readonly id = 'youtube';
   public readonly name = 'YouTube';
@@ -144,13 +162,20 @@ export class YouTubeProvider extends BasePlatformProvider {
       return this.resolveWithMp4Mp3Downloader(detection, apiKey, canonicalUrl, correlationId);
     }
 
+    const isVideoAudioDownloader =
+      serverConfig.youtube.apiHost.includes('youtube-video-audio-downloader') ||
+      serverConfig.youtube.baseUrl.includes('youtube-video-audio-downloader');
+
     const isMediaDownloader =
       serverConfig.youtube.apiHost.includes('youtube-media-downloader') ||
       serverConfig.youtube.baseUrl.includes('youtube-media-downloader');
 
-    const endpointPath = isMediaDownloader
-      ? `/v2/video/details?videoId=${encodeURIComponent(detection.mediaId)}`
-      : `/download.php?id=${encodeURIComponent(detection.mediaId)}`;
+    let endpointPath = `/download.php?id=${encodeURIComponent(detection.mediaId)}`;
+    if (isVideoAudioDownloader) {
+      endpointPath = `/api/v1/youtube-media/info?url=${encodeURIComponent(canonicalUrl)}`;
+    } else if (isMediaDownloader) {
+      endpointPath = `/v2/video/details?videoId=${encodeURIComponent(detection.mediaId)}`;
+    }
 
     const endpointUrl = new URL(
       endpointPath,
@@ -355,10 +380,51 @@ export class YouTubeProvider extends BasePlatformProvider {
           rawFormats.push(item as YouTubeFormatItem);
         }
       }
-    } else if (Array.isArray(payload.links)) {
-      for (const item of payload.links) {
-        if (item && typeof item.url === 'string') {
-          rawFormats.push(item as YouTubeFormatItem);
+    }
+
+    // Format: youtube-video-audio-downloader ({ status: "success", data: { title, thumbnail, duration, links: [...] } })
+    const dataObj =
+      payload.data && typeof payload.data === 'object'
+        ? (payload.data as Record<string, unknown>)
+        : null;
+
+    const linksArray = Array.isArray(payload.links)
+      ? payload.links
+      : dataObj && Array.isArray(dataObj.links)
+      ? dataObj.links
+      : null;
+
+    if (linksArray) {
+      for (const item of linksArray) {
+        if (item && typeof item === 'object') {
+          const rawItem = item as Record<string, unknown>;
+          const linkUrl =
+            typeof rawItem.download_url === 'string'
+              ? rawItem.download_url
+              : typeof rawItem.url === 'string'
+              ? rawItem.url
+              : typeof rawItem.link === 'string'
+              ? rawItem.link
+              : null;
+
+          if (linkUrl) {
+            const isAudio = rawItem.type === 'audio';
+            const quality =
+              typeof rawItem.resolution === 'string'
+                ? rawItem.resolution
+                : isAudio
+                ? 'audio'
+                : '720p';
+            const format = isAudio ? 'mp3' : 'mp4';
+            rawFormats.push({
+              url: linkUrl,
+              quality,
+              format,
+              hasAudio: true,
+              fileSizeBytes:
+                typeof rawItem.size === 'number' ? rawItem.size : null,
+            });
+          }
         }
       }
     } else if (typeof payload.url === 'string') {
@@ -369,15 +435,42 @@ export class YouTubeProvider extends BasePlatformProvider {
       });
     }
 
-    if (rawFormats.length === 0) {
+    // Prioritize direct Cloudflare streams (yqapi.com) over IP-locked googlevideo.com streams
+    const yqFormats = rawFormats.filter((f) => f.url.includes('yqapi.com'));
+    const activeFormats = yqFormats.length > 0 ? yqFormats : rawFormats;
+
+    // If yqapi video streams exist but no audio stream is present, synthesize an MP3 audio format option.
+    const hasAudioFormat = activeFormats.some(
+      (f) => f.format === 'mp3' || f.quality?.toLowerCase().includes('audio')
+    );
+    if (!hasAudioFormat && yqFormats.length > 0) {
+      const sampleYq = yqFormats[0];
+      const audioUrl = sampleYq.url
+        .replace(/&q=[^&]+/, '&q=bestaudio')
+        .replace(/&f=[^&]+/, '&f=mp3');
+      activeFormats.push({
+        url: audioUrl,
+        quality: 'audio',
+        format: 'mp3',
+        hasAudio: true,
+      });
+    }
+
+    if (activeFormats.length === 0) {
       throw new TempelinkError(
         'RESOLUTION_FAILED',
         'Tidak ditemukan stream media yang dapat diunduh pada link YouTube ini.'
       );
     }
 
-    const title = (payload.title as string) || `YouTube Video (${mediaId})`;
-    let thumbnail = (payload.thumbnail as string) || '';
+    const title =
+      (payload.title as string) ||
+      (dataObj && typeof dataObj.title === 'string' ? dataObj.title : '') ||
+      `YouTube Video (${mediaId})`;
+    let thumbnail =
+      (payload.thumbnail as string) ||
+      (dataObj && typeof dataObj.thumbnail === 'string' ? dataObj.thumbnail : '') ||
+      '';
     if (!thumbnail && Array.isArray(payload.thumbnails) && payload.thumbnails.length > 0) {
       const thumbs = payload.thumbnails as Array<{ url?: string }>;
       thumbnail = thumbs[thumbs.length - 1]?.url || thumbs[0]?.url || '';
@@ -386,17 +479,15 @@ export class YouTubeProvider extends BasePlatformProvider {
       thumbnail = `https://i.ytimg.com/vi/${mediaId}/hqdefault.jpg`;
     }
     const durationSeconds =
-      typeof payload.lengthSeconds === 'number'
-        ? payload.lengthSeconds
-        : payload.duration
-        ? parseInt(String(payload.duration), 10) || null
-        : null;
+      parseDurationString(payload.lengthSeconds) ??
+      parseDurationString(payload.duration) ??
+      (dataObj ? parseDurationString(dataObj.duration) : null);
 
     const capabilities = [];
     const seenQualities = new Set<string>();
 
-    for (let i = 0; i < rawFormats.length; i++) {
-      const item = rawFormats[i];
+    for (let i = 0; i < activeFormats.length; i++) {
+      const item = activeFormats[i];
 
       // Validate stream URL against SSRF boundary
       try {

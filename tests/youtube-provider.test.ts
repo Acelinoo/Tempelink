@@ -280,5 +280,61 @@ describe('YouTubeProvider — Resolution Engine & Capabilities', () => {
         provider.normalizePayload(mockError, 'test', 'https://www.youtube.com/watch?v=test')
       ).toThrowError(TempelinkError);
     });
+
+    it('resolves youtube-video-audio-downloader format with direct yqapi Cloudflare streams', async () => {
+      const originalKey = serverConfig.youtube.apiKey;
+      serverConfig.youtube.apiKey = 'test_key';
+
+      const mockPayload = {
+        status: 'success',
+        data: {
+          title: 'Unboxing + tes fitur baru iPhone 18 Pro & Pro Max!',
+          duration: '31:51',
+          thumbnail: 'https://i.ytimg.com/vi/BQIwRiMxHXc/maxresdefault.jpg',
+          links: [
+            {
+              type: 'audio',
+              download_url: 'https://yqapi.com/api/v1/download?ms=youtube&s=abc&q=bestaudio&f=mp3',
+            },
+            {
+              type: 'video',
+              resolution: '428p',
+              download_url: 'https://yqapi.com/api/v1/download?ms=youtube&s=abc&q=397&f=mp4',
+            },
+            {
+              type: 'video',
+              resolution: '320p',
+              download_url: 'https://rr4---sn-test.googlevideo.com/videoplayback?itag=18',
+            },
+          ],
+        },
+      };
+
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockPayload,
+      } as unknown as Response);
+
+      const url = new URL('https://www.youtube.com/watch?v=BQIwRiMxHXc');
+      const res = await provider.resolve(url);
+
+      expect(res.mediaId).toBe('BQIwRiMxHXc');
+      expect(res.title).toBe('Unboxing + tes fitur baru iPhone 18 Pro & Pro Max!');
+      expect(res.durationSeconds).toBe(1911); // 31 * 60 + 51
+      expect(res.thumbnailUrl).toBe('https://i.ytimg.com/vi/BQIwRiMxHXc/maxresdefault.jpg');
+
+      // Check capabilities
+      const audioCap = res.capabilities.find((c) => c.type === 'audio');
+      expect(audioCap).toBeDefined();
+      expect(audioCap?.format).toBe('mp3');
+      expect(audioCap?.downloadUrl).toContain('yqapi.com');
+
+      const videoCap = res.capabilities.find((c) => c.type === 'video');
+      expect(videoCap).toBeDefined();
+      expect(videoCap?.downloadUrl).toContain('yqapi.com');
+
+      serverConfig.youtube.apiKey = originalKey;
+    });
   });
 });

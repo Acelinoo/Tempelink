@@ -128,7 +128,7 @@ export const serverConfig = {
       if (val) {
         return val;
       }
-      return 'youtube-mp4-mp3-downloader.p.rapidapi.com';
+      return 'youtube-video-audio-downloader.p.rapidapi.com';
     },
     set apiHost(val: string) {
       this._customApiHost = val;
@@ -142,7 +142,7 @@ export const serverConfig = {
       if (val) {
         return val;
       }
-      return 'https://youtube-mp4-mp3-downloader.p.rapidapi.com';
+      return 'https://youtube-video-audio-downloader.p.rapidapi.com';
     },
     set baseUrl(val: string) {
       this._customBaseUrl = val;
