@@ -179,10 +179,12 @@ export default function HomePage() {
       setTimeout(() => {
         setDownloadState('idle');
       }, 3500);
-    } catch {
+    } catch (err: unknown) {
       setDownloadState('error');
+      const customMessage =
+        err instanceof Error && err.message ? err.message : t('downloadFailed');
       setError({
-        message: t('downloadFailed'),
+        message: customMessage,
         code: 'DOWNLOAD_FAILED',
       });
     }

@@ -216,15 +216,27 @@ export class FileBatchStore implements BatchStore {
         return null;
       }
 
-      const pendingJob = batch.jobs.find((j) => j.status === 'PENDING');
-      if (!pendingJob) {
+      const nowMs = Date.now();
+      const STALE_JOB_THRESHOLD_MS = 20000; // 20s recovery threshold for serverless zombie jobs
+
+      let targetJob = batch.jobs.find((j) => j.status === 'PENDING');
+      if (!targetJob) {
+        targetJob = batch.jobs.find((j) => {
+          if (j.status !== 'RESOLVING') return false;
+          if (!j.startedAt) return true;
+          const startedMs = new Date(j.startedAt).getTime();
+          return nowMs - startedMs > STALE_JOB_THRESHOLD_MS && j.attempts < (j.maxAttempts || 2);
+        });
+      }
+
+      if (!targetJob) {
         return null;
       }
 
       // Atomically transition from PENDING to RESOLVING
-      pendingJob.status = 'RESOLVING';
-      pendingJob.startedAt = new Date().toISOString();
-      pendingJob.attempts += 1;
+      targetJob.status = 'RESOLVING';
+      targetJob.startedAt = new Date().toISOString();
+      targetJob.attempts += 1;
 
       if (batch.status === 'PENDING') {
         batch.status = 'PROCESSING';
@@ -237,7 +249,7 @@ export class FileBatchStore implements BatchStore {
       await fs.mkdir(this.dataDir, { recursive: true });
       await fs.writeFile(targetFile, JSON.stringify(batch, null, 2), 'utf-8');
 
-      return { batch, job: { ...pendingJob } };
+      return { batch, job: { ...targetJob } };
     });
   }
 

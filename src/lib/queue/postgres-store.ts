@@ -294,16 +294,31 @@ export class PostgresBatchStore implements BatchStore {
         return null;
       }
 
-      const pendingJob = batch.jobs.find((j) => j.status === 'PENDING');
-      if (!pendingJob) {
+      const nowMs = Date.now();
+      const STALE_JOB_THRESHOLD_MS = 20000; // 20s recovery threshold for serverless zombie jobs
+
+      // 1. First look for any cleanly PENDING job
+      let targetJob = batch.jobs.find((j) => j.status === 'PENDING');
+
+      // 2. If no PENDING job, check for abandoned / stale RESOLVING job (serverless execution interrupted)
+      if (!targetJob) {
+        targetJob = batch.jobs.find((j) => {
+          if (j.status !== 'RESOLVING') return false;
+          if (!j.startedAt) return true;
+          const startedMs = new Date(j.startedAt).getTime();
+          return nowMs - startedMs > STALE_JOB_THRESHOLD_MS && j.attempts < (j.maxAttempts || 2);
+        });
+      }
+
+      if (!targetJob) {
         await client.query('ROLLBACK');
         return null;
       }
 
       // Atomically claim job
-      pendingJob.status = 'RESOLVING';
-      pendingJob.startedAt = new Date().toISOString();
-      pendingJob.attempts += 1;
+      targetJob.status = 'RESOLVING';
+      targetJob.startedAt = new Date().toISOString();
+      targetJob.attempts += 1;
 
       if (batch.status === 'PENDING') {
         batch.status = 'PROCESSING';
@@ -321,7 +336,7 @@ export class PostgresBatchStore implements BatchStore {
       );
 
       await client.query('COMMIT');
-      return { batch, job: { ...pendingJob } };
+      return { batch, job: { ...targetJob } };
     } catch (err: unknown) {
       try {
         await client.query('ROLLBACK');

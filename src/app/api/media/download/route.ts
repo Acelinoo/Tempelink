@@ -174,6 +174,25 @@ export async function POST(req: NextRequest) {
 }
 
 /**
+ * Preflight token validation: HEAD /api/media/download?token=...
+ */
+export async function HEAD(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const token = searchParams.get('token');
+    if (!token) {
+      return new Response(null, { status: 400 });
+    }
+    const payload = verifyDownloadToken(token);
+    const parsedTarget = normalizeAndParseUrl(payload.targetUrl);
+    validateUrlSafety(parsedTarget);
+    return new Response(null, { status: 200 });
+  } catch {
+    return new Response(null, { status: 403 });
+  }
+}
+
+/**
  * Direct browser download route handler: GET /api/media/download?token=...
  */
 export async function GET(req: NextRequest) {
@@ -223,27 +242,44 @@ export async function GET(req: NextRequest) {
 
       upstreamStatus = upstreamRes.status;
 
-      if (upstreamRes.ok && upstreamRes.body) {
-        const streamHeaders = new Headers();
-        streamHeaders.set('X-Correlation-ID', correlationId);
-        streamHeaders.set(
-          'Content-Disposition',
-          formatContentDisposition(payload.filename)
-        );
-        streamHeaders.set(
-          'Content-Type',
-          payload.mimeType ||
-            upstreamRes.headers.get('content-type') ||
-            'application/octet-stream'
-        );
-        const contentLength = upstreamRes.headers.get('content-length');
-        if (contentLength) {
-          streamHeaders.set('Content-Length', contentLength);
+      if (upstreamRes.ok) {
+        const contentLengthHeader = upstreamRes.headers.get('content-length');
+        const contentLengthNum = contentLengthHeader ? parseInt(contentLengthHeader, 10) : 0;
+        const isLargeStream = contentLengthNum > 20 * 1024 * 1024; // > 20 MB
+
+        // If media is larger than 20MB, proxying through a Vercel serverless function
+        // risks timing out (10s Hobby limit). Redirect browser directly to authentic CDN source.
+        if (isLargeStream) {
+          const streamTokenParts = token.split('.');
+          const streamIdempotencyKey = `get:${streamTokenParts[streamTokenParts.length - 1]}`;
+          recordDownloadEvent({
+            idempotencyKey: streamIdempotencyKey,
+            platform: payload.capabilityId?.split('_')[0],
+          }).catch(() => { /* non-fatal */ });
+
+          return NextResponse.redirect(payload.targetUrl, 307);
         }
-        streamHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-        streamHeaders.set('Pragma', 'no-cache');
-        streamHeaders.set('Expires', '0');
-        streamHeaders.set('X-Content-Type-Options', 'nosniff');
+
+        if (upstreamRes.body) {
+          const streamHeaders = new Headers();
+          streamHeaders.set('X-Correlation-ID', correlationId);
+          streamHeaders.set(
+            'Content-Disposition',
+            formatContentDisposition(payload.filename)
+          );
+          streamHeaders.set(
+            'Content-Type',
+            payload.mimeType ||
+              upstreamRes.headers.get('content-type') ||
+              'application/octet-stream'
+          );
+          if (contentLengthHeader) {
+            streamHeaders.set('Content-Length', contentLengthHeader);
+          }
+          streamHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+          streamHeaders.set('Pragma', 'no-cache');
+          streamHeaders.set('Expires', '0');
+          streamHeaders.set('X-Content-Type-Options', 'nosniff');
 
         // Record analytics event for streamed downloads.
         // Idempotency key = token signature — prevents duplicate counting on retries.
@@ -259,11 +295,12 @@ export async function GET(req: NextRequest) {
           headers: streamHeaders,
         });
       }
+    }
 
-      Logger.warn('[Download] Upstream returned non-OK status', {
-        status: upstreamRes.status,
-        correlationId,
-      });
+    Logger.warn('[Download] Upstream returned non-OK status', {
+      status: upstreamRes.status,
+      correlationId,
+    });
     } catch (streamErr) {
       Logger.warn('[Download] Upstream fetch failed', {
         error: streamErr instanceof Error ? streamErr.message : String(streamErr),

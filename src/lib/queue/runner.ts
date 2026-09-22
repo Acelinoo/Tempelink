@@ -153,13 +153,31 @@ export class QueueRunner {
     jobId: string;
   } | null> {
     const batches = await this.store.listBatches();
+    const nowMs = Date.now();
+    const STALE_JOB_THRESHOLD_MS = 20000;
+
     for (const batch of batches) {
       if (batch.status === 'CANCELLED' || batch.status === 'FAILED') continue;
-      const pending = batch.jobs.find(
+
+      // 1. Look for cleanly PENDING job
+      let candidate = batch.jobs.find(
         (j) => j.status === 'PENDING' && !this.inFlightJobs.has(j.id)
       );
-      if (pending) {
-        return { batchId: batch.id, jobId: pending.id };
+
+      // 2. If no PENDING job, check for abandoned / stale RESOLVING job (serverless recovery)
+      if (!candidate) {
+        candidate = batch.jobs.find((j) => {
+          if (j.status !== 'RESOLVING' || this.inFlightJobs.has(j.id)) return false;
+          if (!j.startedAt) return true;
+          return (
+            nowMs - new Date(j.startedAt).getTime() > STALE_JOB_THRESHOLD_MS &&
+            j.attempts < (j.maxAttempts || 2)
+          );
+        });
+      }
+
+      if (candidate) {
+        return { batchId: batch.id, jobId: candidate.id };
       }
     }
     return null;
@@ -205,16 +223,18 @@ export class QueueRunner {
     }
 
     const job = batch.jobs.find((j) => j.id === jobId);
-    if (!job || job.status !== 'PENDING') {
+    if (!job) return;
+
+    const isStaleResolving =
+      job.status === 'RESOLVING' &&
+      job.startedAt &&
+      Date.now() - new Date(job.startedAt).getTime() > 20000;
+
+    if (job.status !== 'PENDING' && !isStaleResolving) {
       return;
     }
 
-    // Transition: PENDING -> RESOLVING
-    if (!canTransitionJob(job.status, 'RESOLVING')) {
-      return;
-    }
-
-    job.attempts = 1;
+    job.attempts = (job.attempts || 0) + 1;
     job.status = 'RESOLVING';
     job.startedAt = new Date().toISOString();
 
