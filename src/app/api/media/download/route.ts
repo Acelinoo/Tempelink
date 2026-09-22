@@ -9,6 +9,7 @@ import { validateApiRequest, readJsonBody } from '@/lib/security/api-guard';
 import { Logger } from '@/lib/telemetry/logger';
 import { trackEvent } from '@/lib/telemetry/events';
 import { recordDownloadEvent } from '@/lib/analytics/db';
+import { providerRegistry } from '@/lib/platforms/core/registry';
 
 const ALLOWED_MEDIA_MIME_TYPES = new Set([
   'video/mp4',
@@ -268,6 +269,83 @@ export async function GET(req: NextRequest) {
         error: streamErr instanceof Error ? streamErr.message : String(streamErr),
         correlationId,
       });
+    }
+
+    // If upstream streaming failed (e.g. HTTP 403 due to expired or IP-bound legacy token),
+    // and a sourceUrl is present, attempt an on-the-fly re-resolution with the active provider.
+    if ((upstreamStatus === 403 || upstreamStatus === 410) && payload.sourceUrl) {
+      try {
+        const parsedSource = new URL(payload.sourceUrl);
+        const provider = providerRegistry.findForUrl(parsedSource);
+        if (provider) {
+          Logger.info('[Download] Attempting auto-refresh re-resolution for media', {
+            mediaId: payload.mediaId,
+            correlationId,
+          });
+          const freshResolution = await provider.resolve(parsedSource, { correlationId });
+          const matchingCap =
+            freshResolution.capabilities.find((c) => c.id === payload.capabilityId) ||
+            freshResolution.capabilities.find((c) => c.type === (payload.mimeType?.startsWith('audio') ? 'audio' : 'video')) ||
+            freshResolution.capabilities[0];
+
+          if (matchingCap?.downloadUrl && matchingCap.downloadUrl !== payload.targetUrl) {
+            const freshTarget = normalizeAndParseUrl(matchingCap.downloadUrl);
+            validateUrlSafety(freshTarget);
+
+            const retryRes = await fetch(matchingCap.downloadUrl, {
+              method: 'GET',
+              headers: {
+                'User-Agent':
+                  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                Referer: 'https://www.youtube.com/',
+                Origin: 'https://www.youtube.com',
+                Accept: '*/*',
+              },
+              signal: AbortSignal.timeout(30000),
+            });
+
+            if (retryRes.ok && retryRes.body) {
+              const streamHeaders = new Headers();
+              streamHeaders.set('X-Correlation-ID', correlationId);
+              streamHeaders.set(
+                'Content-Disposition',
+                formatContentDisposition(payload.filename)
+              );
+              streamHeaders.set(
+                'Content-Type',
+                payload.mimeType ||
+                  retryRes.headers.get('content-type') ||
+                  'application/octet-stream'
+              );
+              const contentLength = retryRes.headers.get('content-length');
+              if (contentLength) {
+                streamHeaders.set('Content-Length', contentLength);
+              }
+              streamHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+              streamHeaders.set('Pragma', 'no-cache');
+              streamHeaders.set('Expires', '0');
+              streamHeaders.set('X-Content-Type-Options', 'nosniff');
+
+              const streamTokenParts = token.split('.');
+              const streamIdempotencyKey = `get:${streamTokenParts[streamTokenParts.length - 1]}`;
+              recordDownloadEvent({
+                idempotencyKey: streamIdempotencyKey,
+                platform: payload.capabilityId?.split('_')[0],
+              }).catch(() => { /* non-fatal */ });
+
+              return new Response(retryRes.body, {
+                status: 200,
+                headers: streamHeaders,
+              });
+            }
+          }
+        }
+      } catch (refreshErr) {
+        Logger.warn('[Download] Fallback auto-refresh failed', {
+          error: refreshErr instanceof Error ? refreshErr.message : String(refreshErr),
+          correlationId,
+        });
+      }
     }
 
     // Streaming failed — never redirect browser to upstream URL.

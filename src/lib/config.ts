@@ -119,12 +119,34 @@ export const serverConfig = {
     set apiKey(val: string) {
       this._customApiKey = val;
     },
-    apiHost:
-      process.env.YOUTUBE_PROVIDER_API_HOST ||
-      'youtube-media-downloader.p.rapidapi.com',
-    baseUrl:
-      process.env.YOUTUBE_PROVIDER_BASE_URL ||
-      'https://youtube-media-downloader.p.rapidapi.com',
+    _customApiHost: undefined as string | undefined,
+    get apiHost(): string {
+      if (this._customApiHost !== undefined) {
+        return this._customApiHost;
+      }
+      const val = (process.env.YOUTUBE_PROVIDER_API_HOST || '').trim().replace(/^["']|["']$/g, '');
+      if (val && !val.includes('youtube-video-and-shorts-downloader')) {
+        return val;
+      }
+      return 'youtube-media-downloader.p.rapidapi.com';
+    },
+    set apiHost(val: string) {
+      this._customApiHost = val;
+    },
+    _customBaseUrl: undefined as string | undefined,
+    get baseUrl(): string {
+      if (this._customBaseUrl !== undefined) {
+        return this._customBaseUrl;
+      }
+      const val = (process.env.YOUTUBE_PROVIDER_BASE_URL || '').trim().replace(/^["']|["']$/g, '');
+      if (val && !val.includes('youtube-video-and-shorts-downloader')) {
+        return val;
+      }
+      return 'https://youtube-media-downloader.p.rapidapi.com';
+    },
+    set baseUrl(val: string) {
+      this._customBaseUrl = val;
+    },
     resolveTimeoutMs: Number(process.env.YOUTUBE_RESOLVE_TIMEOUT_MS) || 15000,
     maxRetries: Number(process.env.YOUTUBE_MAX_RETRIES) || 2,
   },
