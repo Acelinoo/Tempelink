@@ -121,11 +121,11 @@ export const serverConfig = {
     },
     apiHost:
       process.env.YOUTUBE_PROVIDER_API_HOST ||
-      'youtube-video-and-shorts-downloader.p.rapidapi.com',
+      'youtube-media-downloader.p.rapidapi.com',
     baseUrl:
       process.env.YOUTUBE_PROVIDER_BASE_URL ||
-      'https://youtube-video-and-shorts-downloader.p.rapidapi.com',
-    resolveTimeoutMs: Number(process.env.YOUTUBE_RESOLVE_TIMEOUT_MS) || 10000,
+      'https://youtube-media-downloader.p.rapidapi.com',
+    resolveTimeoutMs: Number(process.env.YOUTUBE_RESOLVE_TIMEOUT_MS) || 15000,
     maxRetries: Number(process.env.YOUTUBE_MAX_RETRIES) || 2,
   },
 

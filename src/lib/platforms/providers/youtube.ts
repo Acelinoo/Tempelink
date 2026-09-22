@@ -136,8 +136,16 @@ export class YouTubeProvider extends BasePlatformProvider {
     }
 
     const canonicalUrl = `https://www.youtube.com/watch?v=${detection.mediaId}`;
+    const isNewDownloader =
+      serverConfig.youtube.apiHost.includes('youtube-media-downloader') ||
+      serverConfig.youtube.baseUrl.includes('youtube-media-downloader');
+
+    const endpointPath = isNewDownloader
+      ? `/v2/video/details?videoId=${encodeURIComponent(detection.mediaId)}`
+      : `/download.php?id=${encodeURIComponent(detection.mediaId)}`;
+
     const endpointUrl = new URL(
-      `/download.php?id=${encodeURIComponent(detection.mediaId)}`,
+      endpointPath,
       serverConfig.youtube.baseUrl
     ).toString();
 
@@ -258,15 +266,61 @@ export class YouTubeProvider extends BasePlatformProvider {
     mediaId: string,
     sourceUrl: string
   ): MediaResolution {
-    if (payload.status === 'error' || payload.status_code === 404) {
+    if (
+      payload.status === 'error' ||
+      payload.status_code === 404 ||
+      (typeof payload.errorId === 'string' && payload.errorId !== 'Success')
+    ) {
       throw new TempelinkError(
         'CONTENT_UNAVAILABLE',
         (payload.message as string) ||
+          (payload.reason as string) ||
           'Video YouTube tidak ditemukan, bersifat privat, atau telah dihapus.'
       );
     }
 
     const rawFormats: YouTubeFormatItem[] = [];
+
+    // Format: youtube-media-downloader v2 ({ videos: { items: [...] }, audios: { items: [...] } })
+    if (
+      payload.videos &&
+      typeof payload.videos === 'object' &&
+      Array.isArray((payload.videos as { items?: unknown[] }).items)
+    ) {
+      const videoItems = (payload.videos as { items: Record<string, unknown>[] }).items;
+      for (const item of videoItems) {
+        if (item && typeof item.url === 'string') {
+          rawFormats.push({
+            url: item.url,
+            quality: (item.quality as string) || '720p',
+            format: (item.extension as string) || 'mp4',
+            hasAudio: Boolean(item.hasAudio),
+            fileSizeBytes: typeof item.size === 'number' ? item.size : null,
+            width: typeof item.width === 'number' ? item.width : null,
+            height: typeof item.height === 'number' ? item.height : null,
+          });
+        }
+      }
+    }
+
+    if (
+      payload.audios &&
+      typeof payload.audios === 'object' &&
+      Array.isArray((payload.audios as { items?: unknown[] }).items)
+    ) {
+      const audioItems = (payload.audios as { items: Record<string, unknown>[] }).items;
+      for (const item of audioItems) {
+        if (item && typeof item.url === 'string') {
+          rawFormats.push({
+            url: item.url,
+            quality: 'audio',
+            format: (item.extension as string) || 'm4a',
+            hasAudio: true,
+            fileSizeBytes: typeof item.size === 'number' ? item.size : null,
+          });
+        }
+      }
+    }
 
     // Format A (Verified RapidAPI): { status: "ok", results: [ { quality, mime, has_audio, url } ] }
     if (Array.isArray(payload.results)) {
@@ -315,12 +369,20 @@ export class YouTubeProvider extends BasePlatformProvider {
     }
 
     const title = (payload.title as string) || `YouTube Video (${mediaId})`;
-    const thumbnail =
-      (payload.thumbnail as string) ||
-      `https://i.ytimg.com/vi/${mediaId}/hqdefault.jpg`;
-    const durationSeconds = payload.duration
-      ? parseInt(String(payload.duration), 10) || null
-      : null;
+    let thumbnail = (payload.thumbnail as string) || '';
+    if (!thumbnail && Array.isArray(payload.thumbnails) && payload.thumbnails.length > 0) {
+      const thumbs = payload.thumbnails as Array<{ url?: string }>;
+      thumbnail = thumbs[thumbs.length - 1]?.url || thumbs[0]?.url || '';
+    }
+    if (!thumbnail) {
+      thumbnail = `https://i.ytimg.com/vi/${mediaId}/hqdefault.jpg`;
+    }
+    const durationSeconds =
+      typeof payload.lengthSeconds === 'number'
+        ? payload.lengthSeconds
+        : payload.duration
+        ? parseInt(String(payload.duration), 10) || null
+        : null;
 
     const capabilities = [];
     const seenQualities = new Set<string>();
@@ -343,6 +405,7 @@ export class YouTubeProvider extends BasePlatformProvider {
         qualityRaw === 'm4a' ||
         format === 'mp3' ||
         format === 'm4a' ||
+        format === 'weba' ||
         (item.hasAudio === true && !qualityRaw.includes('p'));
 
       const key = `${isAudio ? 'audio' : 'video'}_${qualityRaw}_${format}`;
@@ -353,10 +416,19 @@ export class YouTubeProvider extends BasePlatformProvider {
 
       if (isAudio) {
         const isMp3 = format === 'mp3' || qualityRaw.includes('mp3');
-        const audioFormat = isMp3 ? 'mp3' : 'm4a';
-        const mimeType = isMp3 ? 'audio/mpeg' : 'audio/mp4';
-        const label = isMp3 ? 'Audio (MP3)' : 'Audio Original (M4A)';
-        const capabilityId = `yt_${mediaId}_audio`;
+        const audioFormat = isMp3 ? 'mp3' : format === 'weba' ? 'weba' : 'm4a';
+        const mimeType = isMp3
+          ? 'audio/mpeg'
+          : audioFormat === 'weba'
+          ? 'audio/webm'
+          : 'audio/mp4';
+        const label = isMp3
+          ? 'Audio (MP3)'
+          : audioFormat === 'weba'
+          ? 'Audio Original (WEBA)'
+          : 'Audio Original (M4A)';
+        const capabilityId =
+          audioFormat === 'm4a' ? `yt_${mediaId}_audio` : `yt_${mediaId}_audio_${audioFormat}`;
         const filename = `youtube_${mediaId}_audio.${audioFormat}`;
         const downloadToken = generateDownloadToken({
           mediaId,

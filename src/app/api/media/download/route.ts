@@ -17,6 +17,7 @@ const ALLOWED_MEDIA_MIME_TYPES = new Set([
   'audio/mpeg',
   'audio/mp3',
   'audio/mp4',
+  'audio/webm',
   'audio/ogg',
   'audio/wav',
   'image/jpeg',

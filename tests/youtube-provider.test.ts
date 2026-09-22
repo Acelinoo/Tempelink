@@ -196,5 +196,89 @@ describe('YouTubeProvider — Resolution Engine & Capabilities', () => {
       expect(resolution.capabilities.length).toBe(1);
       expect(resolution.capabilities[0].downloadUrl).toBe('https://rr1---sn-example.googlevideo.com/videoplayback');
     });
+
+    it('resolves youtube-media-downloader v2 { videos: { items: [...] }, audios: { items: [...] } }', async () => {
+      const originalKey = serverConfig.youtube.apiKey;
+      serverConfig.youtube.apiKey = 'test_rapidapi_key';
+
+      const mockV2Payload = {
+        errorId: 'Success',
+        id: 'dQw4w9WgXcQ',
+        title: 'Rick Astley - Never Gonna Give You Up',
+        lengthSeconds: 213,
+        thumbnails: [
+          { url: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/default.jpg', width: 120, height: 90 },
+          { url: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg', width: 1280, height: 720 },
+        ],
+        videos: {
+          errorId: 'Success',
+          items: [
+            {
+              url: 'https://rr1---sn-example.googlevideo.com/videoplayback?itag=18',
+              quality: '360p',
+              width: 640,
+              height: 360,
+              hasAudio: true,
+              extension: 'mp4',
+              size: 11829048,
+            },
+            {
+              url: 'https://rr1---sn-example.googlevideo.com/videoplayback?itag=137',
+              quality: '1080p',
+              width: 1920,
+              height: 1080,
+              hasAudio: false,
+              extension: 'mp4',
+              size: 80911999,
+            },
+          ],
+        },
+        audios: {
+          errorId: 'Success',
+          items: [
+            {
+              url: 'https://rr1---sn-example.googlevideo.com/videoplayback?itag=140',
+              extension: 'm4a',
+              size: 3449447,
+              mimeType: 'audio/mp4; codecs="mp4a.40.2"',
+            },
+          ],
+        },
+      };
+
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockV2Payload,
+      } as unknown as Response);
+
+      const url = new URL('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+      const res = await provider.resolve(url);
+
+      expect(res.mediaId).toBe('dQw4w9WgXcQ');
+      expect(res.title).toBe('Rick Astley - Never Gonna Give You Up');
+      expect(res.durationSeconds).toBe(213);
+      expect(res.thumbnailUrl).toBe('https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg');
+
+      const audio = res.capabilities.find((c) => c.type === 'audio');
+      expect(audio).toBeDefined();
+      expect(audio?.format).toBe('m4a');
+
+      const video1080 = res.capabilities.find((c) => c.type === 'video' && c.label.includes('1080p'));
+      expect(video1080).toBeDefined();
+
+      serverConfig.youtube.apiKey = originalKey;
+    });
+
+    it('throws CONTENT_UNAVAILABLE when v2 errorId is not Success', () => {
+      const mockError = {
+        errorId: 'InvalidParam',
+        reason: 'Video not found or is private.',
+      };
+
+      expect(() =>
+        provider.normalizePayload(mockError, 'test', 'https://www.youtube.com/watch?v=test')
+      ).toThrowError(TempelinkError);
+    });
   });
 });

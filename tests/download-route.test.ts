@@ -115,16 +115,16 @@ describe('Media Download Route Handler (/api/media/download)', () => {
   });
 
   describe('GET /api/media/download (Direct Redirect Route)', () => {
-    it('redirects with 302 and attachment header for valid token when upstream stream fails or offline', async () => {
+    it('returns 503 error for valid token when upstream stream fails or offline', async () => {
       const req = new NextRequest(
         `http://localhost:3000/api/media/download?token=${encodeURIComponent(validToken)}`
       );
 
       const res = await GET(req);
-      expect(res.status).toBe(302);
-      expect(res.headers.get('location')).toBe(validPayload.targetUrl);
-      expect(res.headers.get('content-disposition')).toContain(validPayload.filename);
-      expect(res.headers.get('cache-control')).toContain('no-store');
+      expect(res.status).toBe(503);
+      const json = await res.json();
+      expect(json.success).toBe(false);
+      expect(json.error.code).toBe('DOWNLOAD_UNAVAILABLE');
     });
 
     it('streams media directly with 200 and attachment header when upstream stream succeeds', async () => {
