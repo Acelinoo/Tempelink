@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { Batch, QueueJob } from '../types/queue';
 import { TempelinkError } from '../types/errors';
+import { PostgresBatchStore } from './postgres-store';
 
 export interface BatchStore {
   readonly driver: 'file' | 'postgres' | 'memory';
@@ -297,8 +298,6 @@ export function getBatchStore(): BatchStore {
 
     if (!postgresStoreInstance) {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { PostgresBatchStore } = require('./postgres-store');
         postgresStoreInstance = new PostgresBatchStore(dbUrl);
       } catch (err: unknown) {
         if (err instanceof TempelinkError) throw err;
