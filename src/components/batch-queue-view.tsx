@@ -176,16 +176,6 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
     }
   };
 
-  const handleDownloadAll = async () => {
-    const readyJobs = batch.jobs.filter(
-      (j) => j.status === 'COMPLETED' && j.selectedCapability
-    );
-    for (const job of readyJobs) {
-      await handleDownloadItem(job);
-      await new Promise((r) => setTimeout(r, 600));
-    }
-  };
-
   const renderStatusBadge = (status: JobStatus) => {
     switch (status) {
       case 'PENDING':
@@ -277,16 +267,6 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
               </button>
             )}
 
-            {batch.completed > 0 && (
-              <button
-                type="button"
-                onClick={handleDownloadAll}
-                className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>{t('btnDownloadAll')}</span>
-              </button>
-            )}
 
             <button
               type="button"
