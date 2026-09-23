@@ -125,7 +125,11 @@ export const serverConfig = {
         return this._customApiHost;
       }
       const val = (process.env.YOUTUBE_PROVIDER_API_HOST || '').trim().replace(/^["']|["']$/g, '');
-      if (val) {
+      if (
+        val &&
+        !val.includes('youtube-quick-video-downloader') &&
+        !val.includes('youtube-media-downloader')
+      ) {
         return val;
       }
       return 'youtube-video-audio-downloader.p.rapidapi.com';
@@ -139,7 +143,11 @@ export const serverConfig = {
         return this._customBaseUrl;
       }
       const val = (process.env.YOUTUBE_PROVIDER_BASE_URL || '').trim().replace(/^["']|["']$/g, '');
-      if (val) {
+      if (
+        val &&
+        !val.includes('youtube-quick-video-downloader') &&
+        !val.includes('youtube-media-downloader')
+      ) {
         return val;
       }
       return 'https://youtube-video-audio-downloader.p.rapidapi.com';

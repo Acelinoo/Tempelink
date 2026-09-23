@@ -55,36 +55,71 @@ export async function executeImmediateDownload(options: DownloadOptions): Promis
       if (err instanceof Error && err.message.includes('Unduhan')) {
         throw err;
       }
-      // If network preflight error, continue to trigger native browser anchor
+      // If network preflight error, continue to trigger download
     }
   }
 
-  // Trigger native browser download directly via programmatic anchor.
-  // Note: Only set the HTML5 'download' attribute for static same-origin endpoints.
-  // Setting 'download' on cross-origin URLs or URLs that trigger cross-origin 307 redirects
-  // is blocked by Chrome's security policy, resulting in:
-  // "Failed - Unknown server error. Please try again, or contact the server administrator."
-  // When 'download' is omitted, Chrome honors the server's Content-Disposition: attachment header.
-  const anchor = document.createElement('a');
-  anchor.style.display = 'none';
-  anchor.href = endpoint;
-
+  // CRITICAL FIX: Trigger direct download without opening in-browser video player tab.
+  // Never use target="_blank" on video streams as it instructs Chrome to open a new tab
+  // and display the HTML5 video player instead of saving the file to disk.
+  //
+  // 1. Same-Origin & Blob endpoints: Use HTML5 <a download="..."> without target="_blank".
   const isSameOrigin =
     endpoint.startsWith('/') ||
     (typeof window !== 'undefined' && endpoint.startsWith(window.location.origin));
 
-  if (isSameOrigin && !endpoint.includes('token=')) {
+  if (isSameOrigin) {
+    const anchor = document.createElement('a');
+    anchor.style.display = 'none';
+    anchor.href = endpoint;
     anchor.setAttribute('download', filename);
+    anchor.setAttribute('rel', 'noopener noreferrer');
+    document.body.appendChild(anchor);
+    anchor.click();
+
+    setTimeout(() => {
+      if (document.body.contains(anchor)) {
+        document.body.removeChild(anchor);
+      }
+    }, 5000);
+    return;
   }
 
-  anchor.setAttribute('target', '_blank');
-  anchor.setAttribute('rel', 'noopener noreferrer');
-  document.body.appendChild(anchor);
-  anchor.click();
+  // 2. Cross-Origin Direct Streams (e.g. yqapi Cloudflare CDN with Content-Disposition: attachment):
+  // Use a hidden <iframe>. When the browser navigates an iframe to an endpoint returning
+  // Content-Disposition: attachment, it immediately transfers the payload to the browser's
+  // native download manager (chrome://downloads) without opening a new tab or playing the video.
+  try {
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.top = '-9999px';
+    iframe.style.left = '-9999px';
+    iframe.style.width = '1px';
+    iframe.style.height = '1px';
+    iframe.style.opacity = '0';
+    iframe.style.border = 'none';
+    iframe.src = endpoint;
+    document.body.appendChild(iframe);
 
-  setTimeout(() => {
-    if (document.body.contains(anchor)) {
-      document.body.removeChild(anchor);
-    }
-  }, 5000);
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+    }, 60000);
+  } catch {
+    // Fallback if iframe DOM manipulation fails
+    const anchor = document.createElement('a');
+    anchor.style.display = 'none';
+    anchor.href = endpoint;
+    anchor.setAttribute('download', filename);
+    anchor.setAttribute('rel', 'noopener noreferrer');
+    document.body.appendChild(anchor);
+    anchor.click();
+
+    setTimeout(() => {
+      if (document.body.contains(anchor)) {
+        document.body.removeChild(anchor);
+      }
+    }, 5000);
+  }
 }
