@@ -92,6 +92,7 @@ export interface Translations {
   // YouTube Download Guide Modal
   ytGuideTitle: string;
   ytGuideSubtitle: string;
+  ytGuideScanning: string;
   ytGuideStep1Title: string;
   ytGuideStep1Desc: string;
   ytGuideStep2Title: string;
@@ -172,7 +173,7 @@ export const translations: Record<Language, Translations> = {
     inputPlaceholder:
       'Tempel tautan TikTok, Instagram, YouTube, X, Facebook, atau Pinterest...',
     btnPaste: 'Tempel',
-    btnInspect: 'Unduh',
+    btnInspect: 'Cek Link',
     btnInspecting: 'Memeriksa...',
     btnClear: 'Hapus Tautan',
     clipboardDetected: 'Tautan dari papan klip terdeteksi:',
@@ -248,7 +249,8 @@ export const translations: Record<Language, Translations> = {
     // YouTube Download Guide Modal
     ytGuideTitle: 'Petunjuk Pengunduhan Video YouTube',
     ytGuideSubtitle:
-      'Tautan video YouTube telah dibuka pada tab atau jendela baru peramban Anda. Karena pemutar bawaan peramban memutar media secara langsung, ikuti langkah berikut untuk menyimpan berkas ke perangkat Anda:',
+      'Tautan video YouTube akan dibuka pada tab atau jendela baru peramban Anda. Karena pemutar bawaan peramban memutar media secara langsung, ikuti langkah berikut untuk menyimpan berkas ke perangkat Anda:',
+    ytGuideScanning: 'Sedang memindai dan memeriksa tautan YouTube Anda...',
     ytGuideStep1Title: 'Beralih ke Tab Baru',
     ytGuideStep1Desc:
       'Buka jendela atau tab baru peramban tempat berkas video YouTube Anda sedang diputar.',
@@ -340,8 +342,8 @@ export const translations: Record<Language, Translations> = {
     inputPlaceholder:
       'Paste a TikTok, Instagram, YouTube, X, Facebook, or Pinterest link...',
     btnPaste: 'Paste',
-    btnInspect: 'Download',
-    btnInspecting: 'Inspecting...',
+    btnInspect: 'Check Link',
+    btnInspecting: 'Checking...',
     btnClear: 'Clear Link',
     clipboardDetected: 'Link detected from clipboard:',
     clipboardUse: 'Use Link',
@@ -416,7 +418,8 @@ export const translations: Record<Language, Translations> = {
     // YouTube Download Guide Modal
     ytGuideTitle: 'YouTube Video Download Instructions',
     ytGuideSubtitle:
-      'The YouTube video stream has been opened in a new browser tab. Since the browser default media player plays streams inline, follow these steps to save the file to your device:',
+      'The YouTube video stream will open in a new browser tab. Since the browser default media player plays streams inline, follow these steps to save the file to your device:',
+    ytGuideScanning: 'Scanning and inspecting your YouTube link...',
     ytGuideStep1Title: 'Switch to the New Tab',
     ytGuideStep1Desc:
       'Open the newly opened tab or window where your YouTube video stream is playing.',

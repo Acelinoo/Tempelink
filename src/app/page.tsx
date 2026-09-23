@@ -104,6 +104,13 @@ export default function HomePage() {
     if (e) e.preventDefault();
     if (!url.trim() || isLoading) return;
 
+    // Check if the submitted URL is a YouTube link and trigger the popup reminder right away
+    const trimmed = url.trim().toLowerCase();
+    const isYouTubeUrl = trimmed.includes('youtube.com') || trimmed.includes('youtu.be');
+    if (isYouTubeUrl) {
+      setIsYouTubeGuideOpen(true);
+    }
+
     setIsLoading(true);
     setError(null);
     setResolvedMedia(null);
@@ -533,7 +540,8 @@ export default function HomePage() {
       <YouTubeGuideModal
         isOpen={isYouTubeGuideOpen}
         onClose={() => setIsYouTubeGuideOpen(false)}
-        mediaTitle={resolvedMedia?.title}
+        mediaTitle={resolvedMedia?.title || null}
+        isScanning={isLoading}
       />
     </div>
   );

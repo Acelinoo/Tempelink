@@ -1,19 +1,21 @@
 'use client';
 
 import React from 'react';
-import { X, PlaySquare, MoreVertical, Download, ExternalLink, Smartphone } from 'lucide-react';
+import { X, PlaySquare, MoreVertical, Download, ExternalLink, Smartphone, Loader2 } from 'lucide-react';
 import { useApp } from '@/lib/context/app-context';
 
 interface YouTubeGuideModalProps {
   isOpen: boolean;
   onClose: () => void;
   mediaTitle?: string | null;
+  isScanning?: boolean;
 }
 
 export const YouTubeGuideModal: React.FC<YouTubeGuideModalProps> = ({
   isOpen,
   onClose,
   mediaTitle,
+  isScanning,
 }) => {
   const { t } = useApp();
 
@@ -49,6 +51,16 @@ export const YouTubeGuideModal: React.FC<YouTubeGuideModalProps> = ({
 
         {/* Content Body */}
         <div className="p-5 space-y-4 overflow-y-auto">
+          {/* Scanning Live Notice */}
+          {isScanning && (
+            <div className="p-3 rounded-lg bg-red-950/30 border border-red-800/40 flex items-center space-x-2.5 text-xs text-red-400">
+              <Loader2 className="w-4 h-4 animate-spin flex-shrink-0 text-red-400" />
+              <span className="font-medium">
+                {t('ytGuideScanning')}
+              </span>
+            </div>
+          )}
+
           {mediaTitle && (
             <div className="p-3 rounded-lg bg-app-elevated/60 border border-app">
               <span className="text-[10px] font-mono uppercase tracking-wider text-app-subtle block">
