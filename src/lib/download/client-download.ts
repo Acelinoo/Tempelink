@@ -15,8 +15,18 @@ export interface DownloadOptions {
 export async function executeImmediateDownload(options: DownloadOptions): Promise<void> {
   const { token, directUrl, filename } = options;
 
-  // Use the server streaming endpoint with signed token if available
-  const endpoint = token
+  // Determine optimal download target URL.
+  // When directUrl is an authentic external HTTPS CDN stream (e.g. Cloudflare CDN / yqapi),
+  // navigate directly to it. This completely avoids Vercel serverless execution limits (10s timeout)
+  // and eliminates Chrome's cross-origin download redirect security block ("Failed - Unknown server error").
+  const isDirectCdn =
+    typeof directUrl === 'string' &&
+    /^https?:\/\//i.test(directUrl) &&
+    !directUrl.includes('/api/media/download');
+
+  const endpoint = isDirectCdn
+    ? directUrl
+    : token
     ? `/api/media/download?token=${encodeURIComponent(token)}`
     : directUrl;
 
@@ -24,8 +34,8 @@ export async function executeImmediateDownload(options: DownloadOptions): Promis
     throw new Error('Tautan unduhan tidak tersedia.');
   }
 
-  // Pre-validate token / endpoint availability with a lightweight check
-  if (token) {
+  // Pre-validate token / endpoint availability with a lightweight check if using local token endpoint
+  if (!isDirectCdn && token) {
     try {
       const preflight = await fetch(endpoint, {
         method: 'HEAD',
@@ -33,8 +43,6 @@ export async function executeImmediateDownload(options: DownloadOptions): Promis
       });
 
       if (!preflight.ok && preflight.status !== 405) {
-        // If HEAD failed with an error status (e.g. 403, 410, 503),
-        // try to parse error details if available or provide friendly message
         let errMsg = `Unduhan tidak dapat diproses (HTTP ${preflight.status}).`;
         if (preflight.status === 403 || preflight.status === 410) {
           errMsg = 'Tautan unduhan sudah kedaluwarsa. Silakan periksa kembali tautan lalu unduh ulang.';
@@ -51,14 +59,25 @@ export async function executeImmediateDownload(options: DownloadOptions): Promis
     }
   }
 
-  // Trigger native browser download directly via programmatic anchor
-  // This allows the browser's download manager to stream multi-gigabyte files
-  // directly to disk without running out of RAM in JavaScript blob memory.
+  // Trigger native browser download directly via programmatic anchor.
+  // Note: Only set the HTML5 'download' attribute for static same-origin endpoints.
+  // Setting 'download' on cross-origin URLs or URLs that trigger cross-origin 307 redirects
+  // is blocked by Chrome's security policy, resulting in:
+  // "Failed - Unknown server error. Please try again, or contact the server administrator."
+  // When 'download' is omitted, Chrome honors the server's Content-Disposition: attachment header.
   const anchor = document.createElement('a');
   anchor.style.display = 'none';
   anchor.href = endpoint;
-  anchor.setAttribute('download', filename);
-  anchor.setAttribute('target', '_self');
+
+  const isSameOrigin =
+    endpoint.startsWith('/') ||
+    (typeof window !== 'undefined' && endpoint.startsWith(window.location.origin));
+
+  if (isSameOrigin && !endpoint.includes('token=')) {
+    anchor.setAttribute('download', filename);
+  }
+
+  anchor.setAttribute('target', '_blank');
   anchor.setAttribute('rel', 'noopener noreferrer');
   document.body.appendChild(anchor);
   anchor.click();
@@ -67,5 +86,5 @@ export async function executeImmediateDownload(options: DownloadOptions): Promis
     if (document.body.contains(anchor)) {
       document.body.removeChild(anchor);
     }
-  }, 3000);
+  }, 5000);
 }
