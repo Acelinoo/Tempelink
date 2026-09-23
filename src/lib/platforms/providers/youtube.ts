@@ -174,13 +174,16 @@ export class YouTubeProvider extends BasePlatformProvider {
       serverConfig.youtube.apiHost.includes('youtube-media-downloader') ||
       serverConfig.youtube.baseUrl.includes('youtube-media-downloader');
 
-    let endpointPath = `/download.php?id=${encodeURIComponent(detection.mediaId)}`;
+    let endpointPath = `/api/v1/youtube-media/info?url=${encodeURIComponent(canonicalUrl)}`;
     if (isQuickVideoDownloader) {
       endpointPath = '/api/youtube/links';
-    } else if (isVideoAudioDownloader) {
-      endpointPath = `/api/v1/youtube-media/info?url=${encodeURIComponent(canonicalUrl)}`;
     } else if (isMediaDownloader) {
       endpointPath = `/v2/video/details?videoId=${encodeURIComponent(detection.mediaId)}`;
+    } else if (
+      serverConfig.youtube.apiHost.includes('download.php') ||
+      serverConfig.youtube.baseUrl.includes('download.php')
+    ) {
+      endpointPath = `/download.php?id=${encodeURIComponent(detection.mediaId)}`;
     }
 
     const endpointUrl = new URL(
@@ -486,6 +489,29 @@ export class YouTubeProvider extends BasePlatformProvider {
     // Prioritize direct Cloudflare streams (yqapi.com) over IP-locked googlevideo.com streams
     const yqFormats = rawFormats.filter((f) => f.url.includes('yqapi.com'));
     const activeFormats = yqFormats.length > 0 ? yqFormats : rawFormats;
+
+    // If yqapi video streams exist, enrich with standard HD quality streams if not already provided
+    if (yqFormats.length > 0) {
+      const sampleYq = yqFormats[0];
+      const has720 = activeFormats.some((f) => f.quality?.toLowerCase().includes('720'));
+      if (!has720) {
+        activeFormats.push({
+          url: sampleYq.url.replace(/&q=[^&]+/, '&q=720').replace(/&f=[^&]+/, '&f=mp4'),
+          quality: '720p',
+          format: 'mp4',
+          hasAudio: true,
+        });
+      }
+      const has1080 = activeFormats.some((f) => f.quality?.toLowerCase().includes('1080'));
+      if (!has1080) {
+        activeFormats.push({
+          url: sampleYq.url.replace(/&q=[^&]+/, '&q=1080').replace(/&f=[^&]+/, '&f=mp4'),
+          quality: '1080p',
+          format: 'mp4',
+          hasAudio: true,
+        });
+      }
+    }
 
     // If yqapi video streams exist but no audio stream is present, synthesize an MP3 audio format option.
     const hasAudioFormat = activeFormats.some(

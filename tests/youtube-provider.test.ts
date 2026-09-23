@@ -337,6 +337,65 @@ describe('YouTubeProvider — Resolution Engine & Capabilities', () => {
       serverConfig.youtube.apiKey = originalKey;
     });
 
+    it('resolves user requested video (iQuAtbi9UKo) with yqapi Cloudflare streams and synthesized audio/HD', async () => {
+      const originalKey = serverConfig.youtube.apiKey;
+      serverConfig.youtube.apiKey = 'test_key';
+
+      const mockPayload = {
+        status: 'success',
+        data: {
+          title: 'I Opened A FAKE Apple Store',
+          uploader: 'Niko Omilana',
+          thumbnail: 'https://i.ytimg.com/vi/iQuAtbi9UKo/maxresdefault.jpg',
+          duration: '00:17:14',
+          links: [
+            {
+              type: 'video',
+              resolution: '360p',
+              download_url: 'https://rr5---sn-n4v7snee.googlevideo.com/videoplayback?expire=1790',
+            },
+            {
+              type: 'video',
+              resolution: '480p',
+              download_url:
+                'https://yqapi.com/api/v1/download?ms=youtube&s=1387a3d8e107d2160df9ecaa5b3169cd&q=397&l=https%3A%2F%2Fyoutu.be%2FiQuAtbi9UKo%3Fsi%3D_pQnBbO6KAcNL0WG&f=mp4',
+            },
+          ],
+        },
+      };
+
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockPayload,
+      } as unknown as Response);
+
+      const url = new URL('https://youtu.be/iQuAtbi9UKo?si=_pQnBbO6KAcNL0WG');
+      const res = await provider.resolve(url);
+
+      expect(res.mediaId).toBe('iQuAtbi9UKo');
+      expect(res.title).toBe('I Opened A FAKE Apple Store');
+      expect(res.durationSeconds).toBe(1034); // 17 * 60 + 14
+      expect(res.thumbnailUrl).toBe('https://i.ytimg.com/vi/iQuAtbi9UKo/maxresdefault.jpg');
+
+      // Verify synthesized audio capability
+      const audioCap = res.capabilities.find((c) => c.type === 'audio');
+      expect(audioCap).toBeDefined();
+      expect(audioCap?.format).toBe('mp3');
+      expect(audioCap?.downloadUrl).toContain('yqapi.com');
+      expect(audioCap?.downloadUrl).toContain('q=bestaudio');
+
+      // Verify direct Cloudflare video streams
+      const videoCaps = res.capabilities.filter((c) => c.type === 'video');
+      expect(videoCaps.length).toBeGreaterThanOrEqual(1);
+      // All video capabilities should use yqapi.com (no IP-locked googlevideo streams)
+      for (const cap of videoCaps) {
+        expect(cap.downloadUrl).toContain('yqapi.com');
+      }
+
+      serverConfig.youtube.apiKey = originalKey;
+    });
+
     it('resolves youtube-quick-video-downloader format with 4K (2160p) and 2K (1440p) streams', async () => {
       const originalKey = serverConfig.youtube.apiKey;
       serverConfig.youtube.apiKey = 'test_key';
