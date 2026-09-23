@@ -58,8 +58,6 @@ async function verifyYouTube() {
       });
       console.log(`[STEP 3] Stream HTTP Status: ${cdnRes.status}`);
       console.log(`[STEP 3] Stream Content-Type: ${cdnRes.headers.get('content-type')}`);
-      console.log(`[STEP 3] Stream Content-Disposition: ${cdnRes.headers.get('content-disposition')}`);
-      console.log(`[STEP 3] Stream URL: ${firstCap.downloadUrl}`);
     }
 
     console.log('\n======================================================');
