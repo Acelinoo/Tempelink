@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '@/lib/context/app-context';
 import { executeImmediateDownload } from '@/lib/download/client-download';
+import { YouTubeGuideModal } from '@/components/youtube-guide-modal';
 
 interface BatchQueueViewProps {
   initialBatch: BatchSummaryResponse;
@@ -73,6 +74,8 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
   const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [downloadErrorJobId, setDownloadErrorJobId] = useState<string | null>(null);
+  const [isYouTubeGuideOpen, setIsYouTubeGuideOpen] = useState(false);
+  const [guideMediaTitle, setGuideMediaTitle] = useState<string | null>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   const isTerminal =
@@ -163,6 +166,11 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
         directUrl: cap.downloadUrl,
         filename,
       });
+
+      if (job.platform === 'youtube') {
+        setGuideMediaTitle(job.mediaMetadata?.title || null);
+        setIsYouTubeGuideOpen(true);
+      }
 
       if (onRecordHistory) {
         onRecordHistory(job);
@@ -445,6 +453,13 @@ export const BatchQueueView: React.FC<BatchQueueViewProps> = ({
           })}
         </div>
       </div>
+
+      {/* YouTube Download Guide Modal */}
+      <YouTubeGuideModal
+        isOpen={isYouTubeGuideOpen}
+        onClose={() => setIsYouTubeGuideOpen(false)}
+        mediaTitle={guideMediaTitle}
+      />
     </div>
   );
 };

@@ -89,6 +89,18 @@ export interface Translations {
   btnClose: string;
   historyItemDate: string;
 
+  // YouTube Download Guide Modal
+  ytGuideTitle: string;
+  ytGuideSubtitle: string;
+  ytGuideStep1Title: string;
+  ytGuideStep1Desc: string;
+  ytGuideStep2Title: string;
+  ytGuideStep2Desc: string;
+  ytGuideStep3Title: string;
+  ytGuideStep3Desc: string;
+  ytGuideMobileTip: string;
+  ytGuideBtnUnderstood: string;
+
   // Errors & Alerts
   errorDefault: string;
   networkError: string;
@@ -232,6 +244,23 @@ export const translations: Record<Language, Translations> = {
     btnClearHistory: 'Hapus Seluruh Riwayat',
     btnClose: 'Tutup',
     historyItemDate: 'Waktu Pengunduhan',
+
+    // YouTube Download Guide Modal
+    ytGuideTitle: 'Petunjuk Pengunduhan Video YouTube',
+    ytGuideSubtitle:
+      'Tautan video YouTube telah dibuka pada tab atau jendela baru peramban Anda. Karena pemutar bawaan peramban memutar media secara langsung, ikuti langkah berikut untuk menyimpan berkas ke perangkat Anda:',
+    ytGuideStep1Title: 'Beralih ke Tab Baru',
+    ytGuideStep1Desc:
+      'Buka jendela atau tab baru peramban tempat berkas video YouTube Anda sedang diputar.',
+    ytGuideStep2Title: 'Klik Ikon Titik Tiga (⋮)',
+    ytGuideStep2Desc:
+      'Pada pojok kanan bawah pemutar video, klik ikon menu titik tiga vertikal (⋮).',
+    ytGuideStep3Title: 'Pilih "Download" / "Unduh"',
+    ytGuideStep3Desc:
+      'Pilih opsi Download untuk langsung menyimpan berkas video ke folder unduhan perangkat Anda.',
+    ytGuideMobileTip:
+      'Pengguna Ponsel / Tablet: Anda juga dapat menekan dan menahan tampilan video selama 1–2 detik, lalu pilih "Simpan Video" atau "Download Video".',
+    ytGuideBtnUnderstood: 'Saya Mengerti, Tutup Panduan',
 
     // Errors & Alerts
     errorDefault: 'Terjadi kesalahan saat memproses permintaan Anda.',
@@ -383,6 +412,23 @@ export const translations: Record<Language, Translations> = {
     btnClearHistory: 'Clear Entire History',
     btnClose: 'Close',
     historyItemDate: 'Download Timestamp',
+
+    // YouTube Download Guide Modal
+    ytGuideTitle: 'YouTube Video Download Instructions',
+    ytGuideSubtitle:
+      'The YouTube video stream has been opened in a new browser tab. Since the browser default media player plays streams inline, follow these steps to save the file to your device:',
+    ytGuideStep1Title: 'Switch to the New Tab',
+    ytGuideStep1Desc:
+      'Open the newly opened tab or window where your YouTube video stream is playing.',
+    ytGuideStep2Title: 'Click the Three Dots (⋮) Icon',
+    ytGuideStep2Desc:
+      'At the bottom right corner of the video player controls, click the vertical three dots menu (⋮).',
+    ytGuideStep3Title: 'Select "Download"',
+    ytGuideStep3Desc:
+      'Click the Download option to immediately save the video file directly to your device downloads folder.',
+    ytGuideMobileTip:
+      'Mobile / Tablet Users: You can also tap and hold the playing video for 1–2 seconds, then select "Save Video" or "Download Video".',
+    ytGuideBtnUnderstood: 'I Understand, Close Guide',
 
     // Errors & Alerts
     errorDefault: 'An error occurred while processing your request.',

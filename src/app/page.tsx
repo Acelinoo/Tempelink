@@ -13,6 +13,7 @@ import {
   CapabilityDownloadState,
 } from '@/components/capability-selector';
 import { DownloadHistoryModal } from '@/components/download-history-modal';
+import { YouTubeGuideModal } from '@/components/youtube-guide-modal';
 import { ErrorAlert } from '@/components/error-alert';
 import { HowToSection } from '@/components/how-to-section';
 import { FeaturesSection } from '@/components/features-section';
@@ -62,6 +63,9 @@ export default function HomePage() {
 
   // History Modal State
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  // YouTube Download Guide Modal State
+  const [isYouTubeGuideOpen, setIsYouTubeGuideOpen] = useState(false);
 
   // Synchronize local anonymous history via useSyncExternalStore
   const historyRaw = useSyncExternalStore(
@@ -163,6 +167,11 @@ export default function HomePage() {
         directUrl: cap.downloadUrl,
         filename,
       });
+
+      // For YouTube downloads, display instruction modal on how to save file if opened in new tab
+      if (resolvedMedia.platform === 'youtube') {
+        setIsYouTubeGuideOpen(true);
+      }
 
       // Record in local anonymous history
       saveLocalHistoryItem({
@@ -518,6 +527,13 @@ export default function HomePage() {
         onClear={handleClearHistory}
         onRemoveItem={handleRemoveHistoryItem}
         onSelectUrl={handleSelectFromHistory}
+      />
+
+      {/* YouTube Download Guide Modal */}
+      <YouTubeGuideModal
+        isOpen={isYouTubeGuideOpen}
+        onClose={() => setIsYouTubeGuideOpen(false)}
+        mediaTitle={resolvedMedia?.title}
       />
     </div>
   );
